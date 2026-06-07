@@ -59,29 +59,29 @@ export default function ScoreCard({ totalScore, dimensions, badge, agentAudits, 
           {config.label}
         </Badge>
       </CardHeader>
-      <CardContent>
-        <div className="flex items-baseline gap-2 mb-6">
-          <span className="text-5xl font-bold tracking-tight" style={{ color: config.color }}>
+      <CardContent className="space-y-2">
+        <div className="flex items-baseline gap-3 mb-8">
+          <span className="text-5xl sm:text-6xl font-bold tracking-tight leading-none" style={{ color: config.color }}>
             {totalScore}
           </span>
-          <span className="text-muted-foreground text-sm font-medium">/ 100</span>
+          <span className="text-muted-foreground text-base font-medium">/ 100</span>
         </div>
 
         {cta && <div className="mb-6">{cta}</div>}
 
         {agentAudits && agentAudits.length > 0 && (
-          <div className="flex flex-wrap gap-2 mb-4">
+          <div className="flex flex-wrap gap-3 mb-6">
             {agentAudits.map((audit) => {
               const pillColor = getScoreColor(audit.totalScore);
               const pillBg = getScoreBg(audit.totalScore);
               return (
                 <span
                   key={audit.agentType}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                  className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium"
                   style={{ color: pillColor, backgroundColor: pillBg }}
                 >
                   {audit.agentName}
-                  <span className="tabular-nums">{audit.totalScore}/100</span>
+                  <span className="tabular-nums font-semibold">{audit.totalScore}/100</span>
                 </span>
               );
             })}
