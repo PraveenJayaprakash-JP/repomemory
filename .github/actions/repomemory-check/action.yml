@@ -69,9 +69,13 @@ runs:
         
         HAS_DRIFT=$(echo "$RESULT" | jq -r '.hasDrift // false')
         STALE_FILES=$(echo "$RESULT" | jq -r '.staleContextFiles | join(", ") // "none"')
+        CHANGED_TABLE=$(echo "$RESULT" | jq -r '.changedFiles[:20] | map("| `" + .path + "` | " + (.change // "modified") + " |") | join("\n") // ""')
+        CHANGED_TOTAL=$(echo "$RESULT" | jq '.changedFiles | length // 0')
         
         echo "drift=$HAS_DRIFT" >> $GITHUB_OUTPUT
         echo "stale=$STALE_FILES" >> $GITHUB_OUTPUT
+        echo "changed_count=$CHANGED_TABLE" >> $GITHUB_OUTPUT
+        echo "changed_total=$CHANGED_TOTAL" >> $GITHUB_OUTPUT
         
         if [ "$HAS_DRIFT" = "true" ]; then
           echo "::warning::Context drift detected! Stale: $STALE_FILES"
@@ -90,11 +94,74 @@ runs:
         script: |
           const drift = '${{ steps.check.outputs.drift }}';
           const stale = '${{ steps.check.outputs.stale }}';
-          if (drift === 'true') {
-            github.rest.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: `## ⚠️ RepoMemory: Context Drift Detected\n\nYour code changed but your AI context files didn't update.\n\n**Stale files:** ${stale}\n\nRun \`repomemory generate . --apply\` to regenerate context files, then commit them.`
+          const changedTable = `${{ steps.check.outputs.changed_count }}`;
+          const changedTotal = parseInt('${{ steps.check.outputs.changed_total }}' || '0', 10);
+
+          if (drift !== 'true') return;
+
+          // Remove outdated bot comments
+          const { data: comments } = await github.rest.issues.listComments({
+            ...context.repo,
+            issue_number: context.issue.number,
+          });
+          const botComments = comments.filter(c =>
+            c.user.type === 'Bot' && c.body && c.body.includes('RepoMemory')
+          );
+          for (const comment of botComments) {
+            await github.rest.issues.deleteComment({
+              ...context.repo,
+              comment_id: comment.id,
             });
           }
+
+          // Build changed files section
+          let changedSection = '';
+          if (changedTable && changedTable.trim()) {
+            const rows = changedTable.trim().split('\n');
+            const displayRows = rows.slice(0, 20);
+            const overflow = rows.length > 20 ? rows.length - 20 : 0;
+            changedSection = `### Changed Files\n\n| File | Change |\n|------|--------|\n${displayRows.join('\n')}`;
+            if (overflow > 0) {
+              changedSection += `\n\n> **...and ${overflow} more file${overflow > 1 ? 's' : ''}.** See the full diff for details.`;
+            }
+          } else {
+            changedSection = '### Changed Files\n\n_Code changes detected but file list unavailable._';
+          }
+
+          // Build stale context section
+          let staleSection = '';
+          if (stale && stale !== 'none' && stale.trim()) {
+            const staleFiles = stale.split(',').map(f => `- \`${f.trim()}\``);
+            staleSection = `### Stale Context Files\n\n${staleFiles.join('\n')}`;
+          } else {
+            staleSection = '### Stale Context Files\n\n_No specific stale files detected, but context may be outdated._';
+          }
+
+          const body = [
+            '## ⚠️ RepoMemory: Context Drift Detected',
+            '',
+            'Your code changed but your AI context files need updating.',
+            '',
+            changedSection,
+            '',
+            staleSection,
+            '',
+            '### How to Fix',
+            '',
+            'Run this command locally:',
+            '```bash',
+            'npx repomemory generate . --apply',
+            'git add CLAUDE.md .claudeignore commands/',
+            'git commit -m "chore: update AI context files"',
+            '```',
+            '',
+            '---',
+            '',
+            '*Powered by [RepoMemory](https://github.com/PraveenJayaprakash-JP/repomemory)*',
+          ].join('\n');
+
+          await github.rest.issues.createComment({
+            ...context.repo,
+            issue_number: context.issue.number,
+            body,
+          });

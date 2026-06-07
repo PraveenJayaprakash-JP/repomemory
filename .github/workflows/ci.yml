@@ -30,8 +30,21 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - name: Check AI context drift
+        id: drift-check
         uses: ./.github/actions/repomemory-check
         with:
           ai-api-key: ${{ secrets.AI_PROVIDER_API_KEY }}
           fail-on-drift: 'false'
+      - name: Generate fresh context report
+        if: steps.drift-check.outputs.drift == 'true'
+        shell: bash
+        run: |
+          echo "## Context Drift Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Stale context:** ${{ steps.drift-check.outputs.stale }}" >> $GITHUB_STEP_SUMMARY
+          echo "**Changed files:** ${{ steps.drift-check.outputs.changed_total }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Run \`npx repomemory generate . --apply\` to fix." >> $GITHUB_STEP_SUMMARY
