@@ -43,6 +43,7 @@ next-env.d.ts
 # RepoMemory
 .repomemory/
 screenshots/
+!public/screenshots/
 
 # Build outputs (sub-packages)
 mcp/dist/
