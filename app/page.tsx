@@ -2,12 +2,13 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
-import { Scan, History, ArrowRight, FolderGit, BarChart3, X } from 'lucide-react';
+import { Scan, History, ArrowRight, FolderGit, BarChart3, X, ExternalLink } from 'lucide-react';
 import ScoreTimeline from '@/components/ScoreTimeline';
 
 interface EnrichedProject {
@@ -61,6 +62,7 @@ interface ScanData {
 }
 
 export default function Dashboard() {
+  const router = useRouter();
   const [projects, setProjects] = useState<EnrichedProject[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
@@ -193,7 +195,16 @@ export default function Dashboard() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-4">
                       <BarChart3 className="h-4 w-4 text-muted-foreground" />
-                      <ArrowRight className="h-4 w-4 text-muted-foreground transition-default group-hover:text-foreground group-hover:translate-x-0.5" />
+                      {p.latestScanId && (
+                        <button
+                          onClick={(e) => { e.stopPropagation(); router.push(`/audit/${p.latestScanId}`); }}
+                          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-default px-2 py-1 rounded-md hover:bg-accent"
+                          title="View full audit report"
+                        >
+                          <span className="hidden sm:inline">Report</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </button>
+                      )}
                     </div>
                   </CardContent>
                 </Card>

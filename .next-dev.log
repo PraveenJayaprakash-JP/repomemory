@@ -1,0 +1,21 @@
+▲ Next.js 16.2.7 (Turbopack)
+- Local:         http://localhost:3456
+- Network:       http://192.168.136.1:3456
+- Environments: .env.local
+✓ Ready in 651ms
+
+ GET / 200 in 462ms (next.js: 206ms, application-code: 255ms)
+ GET /api/projects 200 in 108ms (next.js: 87ms, application-code: 21ms)
+ GET / 200 in 52ms (next.js: 5ms, application-code: 47ms)
+ GET / 200 in 57ms (next.js: 9ms, application-code: 49ms)
+ GET /api/projects 200 in 13ms (next.js: 4ms, application-code: 9ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 43ms (next.js: 32ms, application-code: 11ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ POST /api/scan 200 in 139ms (next.js: 47ms, application-code: 92ms)
+ GET /api/scan/b76b7a25-1490-4037-a8a8-1ed43748e080 200 in 909ms (next.js: 900ms, application-code: 9ms)
+ POST /api/generate 200 in 99s (next.js: 300ms, application-code: 98s)
+ GET /audit/b76b7a25-1490-4037-a8a8-1ed43748e080 200 in 1116ms (next.js: 1036ms, application-code: 80ms)
+ GET / 200 in 49ms (next.js: 5ms, application-code: 44ms)
+ POST /api/scan 200 in 101ms (next.js: 2ms, application-code: 99ms)
+ POST /api/generate 200 in 119s (next.js: 4ms, application-code: 119s)
+ GET /api/scan/b63d6273-d2ba-428e-8c80-8daecb56e41c 200 in 19ms (next.js: 10ms, application-code: 8ms)
