@@ -14,7 +14,7 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import BadgeSnippet from '@/components/BadgeSnippet';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera, Expand } from 'lucide-react';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera, Expand, Sparkles } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
 import { buildArchitectureGraph, getGraphSummary } from '@/lib/graph';
 import ArchGraph from '@/components/ArchGraph';
@@ -49,6 +49,7 @@ export default function AuditPage() {
   const [scan, setScan] = useState<Scan | null>(null);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
+  const [fixing, setFixing] = useState(false);
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [activeTab, setActiveTab] = useState('audit');
   const [error, setError] = useState('');
@@ -113,6 +114,34 @@ export default function AuditPage() {
       toast.error(message);
     } finally {
       setGenerating(false);
+    }
+  };
+
+  const handleFixEverything = async () => {
+    if (!scan) return;
+    setFixing(true);
+    const loadingToast = toast.loading('Fixing everything...');
+    try {
+      const res = await fetch('/api/fix', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ scanId: scan.id }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      setFiles(data.data.files ?? []);
+      setActiveTab('files');
+      toast.dismiss(loadingToast);
+      toast.success('Fix complete', {
+        description: `Written ${data.data.written.length} file${data.data.written.length !== 1 ? 's' : ''}`,
+      });
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      const message = err instanceof Error ? err.message : 'Fix failed';
+      setError(message);
+      toast.error(message);
+    } finally {
+      setFixing(false);
     }
   };
 
@@ -253,11 +282,18 @@ export default function AuditPage() {
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button onClick={handleGenerate} disabled={generating}>
+            <Button onClick={handleGenerate} disabled={generating || fixing}>
               {generating ? (
                 <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
               ) : (
                 <><Download className="h-4 w-4 mr-2" />Generate Context Pack</>
+              )}
+            </Button>
+            <Button onClick={handleFixEverything} disabled={fixing || generating} variant="default" className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70">
+              {fixing ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Fixing...</>
+              ) : (
+                <><Sparkles className="h-4 w-4 mr-2" />Fix Everything</>
               )}
             </Button>
             {files.length > 0 && <ExportButton scanId={scan.id} />}
