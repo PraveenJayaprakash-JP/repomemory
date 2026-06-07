@@ -354,9 +354,17 @@ export default function AuditPage() {
                         <Expand className="h-4 w-4 mr-1.5" />
                         Full View
                       </DialogTrigger>
-                      <DialogContent className="max-w-5xl w-[95vw] h-[85vh] flex flex-col">
-                        <DialogTitle className="text-lg">Dependency Map — Full View</DialogTitle>
-                        <div className="flex-1 overflow-auto p-4 bg-muted/20 rounded-lg">
+                      <DialogContent showCloseButton={false} className="!max-w-[100vw] !w-screen !h-dvh !m-0 !rounded-none flex flex-col">
+                        <div className="flex items-center justify-between px-6 py-3 border-b shrink-0">
+                          <DialogTitle className="text-lg font-semibold">Dependency Map — Full View</DialogTitle>
+                          <button
+                            onClick={() => setFullViewGraph(false)}
+                            className="inline-flex items-center justify-center rounded-md text-sm font-medium px-3 py-1.5 border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-default"
+                          >
+                            Close
+                          </button>
+                        </div>
+                        <div className="flex-1 overflow-auto p-4 sm:p-6 lg:p-8 bg-muted/20">
                           <ArchGraph graph={graph} />
                         </div>
                       </DialogContent>
