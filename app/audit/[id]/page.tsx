@@ -229,6 +229,7 @@ export default function AuditPage() {
               totalScore={scan.audit.totalScore}
               dimensions={scan.audit.dimensions}
               badge={scan.audit.badge}
+              agentAudits={scan.audit.agentAudits}
               cta={
                 <Button onClick={handleGenerate} disabled={generating} size="sm">
                   {generating ? (

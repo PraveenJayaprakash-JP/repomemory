@@ -11,6 +11,7 @@ const MOCK_SNAPSHOT: ProjectSnapshot = {
   totalSizeBytes: 1000000,
   topFiles: ['src/index.ts', 'package.json', 'tsconfig.json', 'README.md'],
   noisyDirs: ['node_modules', '.next'],
+  existingContextFiles: [],
   existingClaudeMd: null,
   existingClaudeIgnore: null,
   existingCommands: [],

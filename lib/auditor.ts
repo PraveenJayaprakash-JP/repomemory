@@ -1,7 +1,7 @@
-// RepoMemory — CLAUDE.md Quality Auditor
-// Scores CLAUDE.md across 7 dimensions. Pure string analysis, no AI calls.
+// RepoMemory — AI Context File Quality Auditor
+// Scores agent context files across 7 dimensions. Pure string analysis, no AI calls.
 
-import type { ProjectSnapshot, AuditDimension, AuditResult } from './types';
+import type { ProjectSnapshot, AuditDimension, AuditResult, AgentAuditResult, AgentType } from './types';
 
 // ── Dimension definitions ──────────────────────────────────────────────
 
@@ -473,32 +473,47 @@ function badgeFor(totalScore: number): AuditResult['badge'] {
   return 'critical';
 }
 
-// ── Main export ────────────────────────────────────────────────────────
+// ── Agent name map ──────────────────────────────────────────────────────
 
-export function auditClaudeMd(
+const AGENT_NAMES: Record<AgentType, string> = {
+  claude: 'Claude',
+  opencode: 'OpenCode',
+  gemini: 'Gemini',
+  aider: 'Aider',
+  cursor: 'Cursor',
+  windsurf: 'Windsurf',
+};
+
+// ── Internal: audit a single agent file ─────────────────────────────────
+
+function auditAgentFile(
   content: string | null,
   snapshot: ProjectSnapshot,
-): AuditResult {
+  agentType: AgentType,
+  fileName: string,
+): { totalScore: number; dimensions: AuditDimension[]; badge: AuditResult['badge']; summary: string } {
+  const agentName = AGENT_NAMES[agentType];
+
   // Null/empty → all zeros, critical
   if (!content || content.trim().length === 0) {
     const dimensions: AuditDimension[] = DIMENSIONS.map((d) => ({
       name: d.name,
       maxScore: d.maxScore,
       score: 0,
-      reason: 'no CLAUDE.md content to evaluate',
+      reason: `no ${fileName} content to evaluate`,
       suggestions: [
-        'Create a CLAUDE.md file with sections for Architecture, Commands, Conventions, Off-limits, Testing, Deployment, and Freshness',
+        `Create a ${fileName} file with sections for Architecture, Commands, Conventions, Off-limits, Testing, Deployment, and Freshness`,
       ],
     }));
     return {
       totalScore: 0,
       dimensions,
-      summary: 'No CLAUDE.md found. Create one to improve AI context quality.',
+      summary: `No ${fileName} found. Create one to improve AI context quality.`,
       badge: 'critical',
     };
   }
 
-  // Score each dimension
+  // Score each dimension using the same 7 scorers
   const scorers: Array<(content: string, snapshot: ProjectSnapshot) => { score: number; reason: string; suggestions: string[] }> = [
     scoreArchitecture,
     scoreCommands,
@@ -529,14 +544,120 @@ export function auditClaudeMd(
 
   let summary: string;
   if (badge === 'excellent') {
-    summary = `CLAUDE.md scores ${totalScore}/100 (${badge}). Strong in: ${strongDimensions.map((d) => d.name).join(', ')}.`;
+    summary = `${fileName} scores ${totalScore}/100 (${badge}). Strong in: ${strongDimensions.map((d) => d.name).join(', ')}.`;
   } else if (badge === 'good') {
-    summary = `CLAUDE.md scores ${totalScore}/100 (${badge}). Improve: ${weakDimensions.map((d) => d.name).join(', ') || 'none'}.`;
+    summary = `${fileName} scores ${totalScore}/100 (${badge}). Improve: ${weakDimensions.map((d) => d.name).join(', ') || 'none'}.`;
   } else if (badge === 'needs-improvement') {
-    summary = `CLAUDE.md scores ${totalScore}/100 (${badge}). Weak areas: ${weakDimensions.map((d) => `${d.name} (${d.reason})`).join('; ')}.`;
+    summary = `${fileName} scores ${totalScore}/100 (${badge}). Weak areas: ${weakDimensions.map((d) => `${d.name} (${d.reason})`).join('; ')}.`;
   } else {
-    summary = `CLAUDE.md scores ${totalScore}/100 (${badge}). Major gaps in: ${weakDimensions.map((d) => `${d.name} — ${d.reason}`).join('; ')}.`;
+    summary = `${fileName} scores ${totalScore}/100 (${badge}). Major gaps in: ${weakDimensions.map((d) => `${d.name} — ${d.reason}`).join('; ')}.`;
   }
 
-  return { totalScore, dimensions, summary, badge };
+  return { totalScore, dimensions, badge, summary };
+}
+
+// ── Main export: audit all context files ─────────────────────────────────
+
+export function auditContextFiles(snapshot: ProjectSnapshot): AuditResult {
+  const agentAudits: AgentAuditResult[] = [];
+
+  for (const ctxFile of snapshot.existingContextFiles) {
+    const result = auditAgentFile(ctxFile.content, snapshot, ctxFile.agentType, ctxFile.fileName);
+    agentAudits.push({
+      agentType: ctxFile.agentType,
+      agentName: AGENT_NAMES[ctxFile.agentType],
+      totalScore: result.totalScore,
+      dimensions: result.dimensions,
+      badge: result.badge,
+      summary: result.summary,
+    });
+  }
+
+  // Calculate weighted average: CLAUDE.md gets 2x weight, others 1x
+  let totalWeight = 0;
+  let weightedSum = 0;
+  let primaryDimensions: AuditDimension[] = [];
+  let primaryBadge: AuditResult['badge'] = 'critical';
+
+  if (agentAudits.length === 0) {
+    // No agent files at all — return zero-score result
+    const dimensions: AuditDimension[] = DIMENSIONS.map((d) => ({
+      name: d.name,
+      maxScore: d.maxScore,
+      score: 0,
+      reason: 'no agent context files found',
+      suggestions: [
+        'Create a CLAUDE.md or other agent context file with sections for Architecture, Commands, Conventions, Off-limits, Testing, Deployment, and Freshness',
+      ],
+    }));
+    return {
+      totalScore: 0,
+      dimensions,
+      summary: 'No agent context files found. Create CLAUDE.md, AGENTS.md, or similar to improve AI context quality.',
+      badge: 'critical',
+      agentAudits: [],
+    };
+  }
+
+  for (const audit of agentAudits) {
+    const weight = audit.agentType === 'claude' ? 2 : 1;
+    weightedSum += audit.totalScore * weight;
+    totalWeight += weight;
+
+    // Use the first claude audit (or first audit) as primary for backward compat
+    if (primaryDimensions.length === 0 || audit.agentType === 'claude') {
+      primaryDimensions = audit.dimensions;
+      primaryBadge = audit.badge;
+    }
+  }
+
+  const totalScore = Math.round(weightedSum / totalWeight);
+  const badge = badgeFor(totalScore);
+
+  // Build combined summary
+  const scored = agentAudits.filter((a) => a.totalScore > 0);
+  const missing = agentAudits.filter((a) => a.totalScore === 0);
+  const parts: string[] = [];
+  if (scored.length > 0) {
+    parts.push(scored.map((a) => `${a.agentName} ${a.totalScore}/100`).join(' · '));
+  }
+  if (missing.length > 0) {
+    parts.push(`Missing: ${missing.map((a) => a.agentName).join(', ')}`);
+  }
+  const summary = parts.join('. ');
+
+  return {
+    totalScore,
+    dimensions: primaryDimensions,
+    summary,
+    badge,
+    agentAudits,
+  };
+}
+
+// ── Legacy export (backward compat) ─────────────────────────────────────
+
+export function auditClaudeMd(
+  content: string | null,
+  snapshot: ProjectSnapshot,
+): AuditResult {
+  // Delegate to auditAgentFile for the CLAUDE.md-specific result
+  const result = auditAgentFile(content, snapshot, 'claude', 'CLAUDE.md');
+
+  return {
+    totalScore: result.totalScore,
+    dimensions: result.dimensions,
+    summary: result.summary,
+    badge: result.badge,
+    agentAudits: [
+      {
+        agentType: 'claude',
+        agentName: 'Claude',
+        totalScore: result.totalScore,
+        dimensions: result.dimensions,
+        badge: result.badge,
+        summary: result.summary,
+      },
+    ],
+  };
 }

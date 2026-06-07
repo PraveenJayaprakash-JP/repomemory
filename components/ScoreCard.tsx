@@ -5,12 +5,13 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { Lightbulb } from 'lucide-react';
-import type { AuditDimension } from '@/lib/types';
+import type { AuditDimension, AgentAuditResult } from '@/lib/types';
 
 interface ScoreCardProps {
   totalScore: number;
   dimensions: AuditDimension[];
   badge: 'excellent' | 'good' | 'needs-improvement' | 'critical';
+  agentAudits?: AgentAuditResult[];
   cta?: React.ReactNode;
 }
 
@@ -39,7 +40,7 @@ function getScoreBg(score: number): string {
   return 'var(--score-critical-bg)';
 }
 
-export default function ScoreCard({ totalScore, dimensions, badge, cta }: ScoreCardProps) {
+export default function ScoreCard({ totalScore, dimensions, badge, agentAudits, cta }: ScoreCardProps) {
   const config = badgeConfig[badge];
 
   const allFirstSuggestions = dimensions
@@ -67,6 +68,25 @@ export default function ScoreCard({ totalScore, dimensions, badge, cta }: ScoreC
         </div>
 
         {cta && <div className="mb-6">{cta}</div>}
+
+        {agentAudits && agentAudits.length > 0 && (
+          <div className="flex flex-wrap gap-2 mb-4">
+            {agentAudits.map((audit) => {
+              const pillColor = getScoreColor(audit.totalScore);
+              const pillBg = getScoreBg(audit.totalScore);
+              return (
+                <span
+                  key={audit.agentType}
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium"
+                  style={{ color: pillColor, backgroundColor: pillBg }}
+                >
+                  {audit.agentName}
+                  <span className="tabular-nums">{audit.totalScore}/100</span>
+                </span>
+              );
+            })}
+          </div>
+        )}
 
         {globalSuggestion && (
           <div className="bg-muted/50 rounded p-3 text-sm flex items-start gap-2 mb-4">

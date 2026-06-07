@@ -134,3 +134,128 @@
  GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 178ms (next.js: 129ms, application-code: 48ms)
 ✓ Compiled in 49ms
  GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 162ms (next.js: 120ms, application-code: 41ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 271ms (next.js: 12ms, application-code: 259ms)
+ GET /api/scan/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 108ms (next.js: 94ms, application-code: 14ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 41ms (next.js: 30ms, application-code: 10ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 66ms (next.js: 14ms, application-code: 52ms)
+ GET /api/scan/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 23ms (next.js: 13ms, application-code: 10ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET / 200 in 44ms (next.js: 21ms, application-code: 23ms)
+ GET /api/projects 200 in 53ms (next.js: 41ms, application-code: 12ms)
+ GET /api/projects 200 in 14ms (next.js: 3ms, application-code: 11ms)
+ GET /scan 200 in 163ms (next.js: 113ms, application-code: 50ms)
+ POST /api/scan 200 in 426ms (next.js: 41ms, application-code: 385ms)
+ POST /api/generate 200 in 38.3s (next.js: 30ms, application-code: 38.2s)
+✓ Compiled in 59ms
+ GET /scan 200 in 198ms (next.js: 113ms, application-code: 85ms)
+ GET /scan 200 in 47ms (next.js: 4ms, application-code: 43ms)
+ GET /scan 200 in 144ms (next.js: 94ms, application-code: 50ms)
+ GET /scan 200 in 236ms (next.js: 150ms, application-code: 86ms)
+ GET /scan 200 in 177ms (next.js: 4ms, application-code: 173ms)
+ GET / 200 in 35ms (next.js: 15ms, application-code: 20ms)
+ GET /api/projects 200 in 72ms (next.js: 60ms, application-code: 13ms)
+ GET /api/projects 200 in 13ms (next.js: 3ms, application-code: 10ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 35ms (next.js: 26ms, application-code: 9ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 53ms (next.js: 27ms, application-code: 26ms)
+ GET /api/scan/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 54ms (next.js: 43ms, application-code: 11ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 13ms (next.js: 3ms, application-code: 10ms)
+ GET /api/scan/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 10ms (next.js: 3ms, application-code: 7ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 129ms (next.js: 82ms, application-code: 47ms)
+ GET /api/badge?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 63ms (next.js: 51ms, application-code: 12ms)
+ GET /api/export?scanId=cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 77ms (next.js: 50ms, application-code: 28ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 156ms (next.js: 107ms, application-code: 48ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 160ms (next.js: 113ms, application-code: 47ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 164ms (next.js: 93ms, application-code: 71ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 58ms (next.js: 3ms, application-code: 55ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 28ms (next.js: 3ms, application-code: 25ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 174ms (next.js: 107ms, application-code: 68ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 86ms (next.js: 3ms, application-code: 83ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 55ms (next.js: 3ms, application-code: 52ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 56ms (next.js: 25ms, application-code: 30ms)
+✓ Compiled in 49ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 208ms (next.js: 129ms, application-code: 79ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 30ms (next.js: 4ms, application-code: 27ms)
+✓ Compiled in 51ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 214ms (next.js: 121ms, application-code: 93ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 52ms (next.js: 5ms, application-code: 47ms)
+✓ Compiled in 55ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 216ms (next.js: 124ms, application-code: 92ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 40ms (next.js: 4ms, application-code: 37ms)
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+✓ Compiled in 52ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 190ms (next.js: 110ms, application-code: 80ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 34ms (next.js: 4ms, application-code: 30ms)
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+✓ Compiled in 52ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 169ms (next.js: 120ms, application-code: 49ms)
+✓ Compiled in 59ms
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 313ms (next.js: 217ms, application-code: 96ms)
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+
+Could not open page.tsx in the editor.
+
+When running on Windows, file names are checked against an access list to protect against remote code execution attacks. File names may consist only of alphanumeric characters (all languages), periods, dashes, slashes, and underscores.
+
+ GET / 200 in 49ms (next.js: 24ms, application-code: 25ms)
+ GET /api/projects 200 in 101ms (next.js: 78ms, application-code: 23ms)
+ GET /api/projects 200 in 17ms (next.js: 4ms, application-code: 13ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 48ms (next.js: 37ms, application-code: 11ms)
+ GET / 200 in 229ms (next.js: 14ms, application-code: 215ms)
+ GET /api/projects 200 in 14ms (next.js: 4ms, application-code: 10ms)
+ GET /audit/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 32ms (next.js: 10ms, application-code: 22ms)
+ GET /api/scan/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 56ms (next.js: 45ms, application-code: 11ms)
+ GET /api/scan/cbbdd7e3-4d19-4323-911b-7d298a4d6ca5 200 in 10ms (next.js: 4ms, application-code: 7ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 23ms (next.js: 12ms, application-code: 11ms)
+ GET /api/scans?projectId=db270912-6ceb-45ab-8c5c-5a02abf54d4a 200 in 10ms (next.js: 3ms, application-code: 8ms)
+ GET /api/projects 200 in 18ms (next.js: 4ms, application-code: 14ms)
+ GET /api/projects 200 in 19ms (next.js: 4ms, application-code: 15ms)
+ GET /scan 200 in 130ms (next.js: 102ms, application-code: 28ms)
+ POST /api/scan 200 in 382ms (next.js: 68ms, application-code: 313ms)

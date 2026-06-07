@@ -2,7 +2,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { scanRepository } from '@/lib/scanner';
-import { auditClaudeMd } from '@/lib/auditor';
+import { auditContextFiles } from '@/lib/auditor';
 import { checkDrift, createDriftEvent } from '@/lib/drift';
 import { saveProject, saveScan, getProjectByPath, generateId, listScans } from '@/lib/storage';
 import type { Project, Scan, ApiResponse } from '@/lib/types';
@@ -23,8 +23,8 @@ export async function POST(request: NextRequest) {
     // Run scan
     const snapshot = await scanRepository(folderPath);
 
-    // Run audit
-    const audit = auditClaudeMd(snapshot.existingClaudeMd, snapshot);
+    // Run audit (all agent context files)
+    const audit = auditContextFiles(snapshot);
 
     // Find or create project
     let project = getProjectByPath(folderPath);

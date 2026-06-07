@@ -221,6 +221,7 @@ export default function ScanPage() {
                 totalScore={scan.audit.totalScore}
                 dimensions={scan.audit.dimensions}
                 badge={scan.audit.badge}
+                agentAudits={scan.audit.agentAudits}
               />
               <Card className="transition-default hover:shadow-sm">
                 <CardHeader>

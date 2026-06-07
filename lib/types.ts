@@ -30,7 +30,8 @@ export interface ProjectSnapshot {
   totalSizeBytes: number;
   topFiles: string[];
   noisyDirs: string[]; // node_modules, .git, dist, etc.
-  existingClaudeMd: string | null; // content if exists
+  existingContextFiles: AgentContextFile[];
+  existingClaudeMd: string | null; // content if exists (kept for backward compat)
   existingClaudeIgnore: string | null;
   existingCommands: string[]; // file names in /commands/
   fileTreeHashes: FileTreeHash[];
@@ -54,10 +55,11 @@ export interface AuditDimension {
 
 /** Full audit result */
 export interface AuditResult {
-  totalScore: number; // 0-100
-  dimensions: AuditDimension[];
+  totalScore: number; // 0-100 (weighted average of all audited agents)
+  dimensions: AuditDimension[]; // primary agent dimensions (backward compat)
   summary: string;
   badge: 'excellent' | 'good' | 'needs-improvement' | 'critical';
+  agentAudits: AgentAuditResult[]; // per-agent breakdown
 }
 
 /** A single generated context file */
@@ -146,6 +148,23 @@ export const AGENT_DISPLAY_NAMES: Record<AgentType, string> = {
   opencode: 'OpenCode',
   aider: 'Aider',
 };
+
+/** A detected agent context file with its content */
+export interface AgentContextFile {
+  agentType: AgentType;
+  fileName: string;
+  content: string | null;
+}
+
+/** Per-agent audit result */
+export interface AgentAuditResult {
+  agentType: AgentType;
+  agentName: string;
+  totalScore: number;
+  dimensions: AuditDimension[];
+  badge: 'excellent' | 'good' | 'needs-improvement' | 'critical';
+  summary: string;
+}
 
 /** File descriptor for a single generated context file */
 export interface AgentFileDescriptor {

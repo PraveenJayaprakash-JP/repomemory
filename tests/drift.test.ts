@@ -11,6 +11,7 @@ const BASE_SNAPSHOT: ProjectSnapshot = {
   totalSizeBytes: 1000000,
   topFiles: ['src/index.ts', 'package.json'],
   noisyDirs: ['node_modules'],
+  existingContextFiles: [],
   existingClaudeMd: null,
   existingClaudeIgnore: null,
   existingCommands: [],

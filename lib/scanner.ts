@@ -12,6 +12,8 @@ import type {
   DetectedLanguage,
   DetectedFramework,
   FileTreeHash,
+  AgentContextFile,
+  AgentType,
 } from './types';
 
 // ─── Constants ────────────────────────────────────────────
@@ -252,12 +254,27 @@ async function detectFramework(
   return 'Unknown';
 }
 
+// ─── Agent Context File Definitions ────────────────────────
+
+const AGENT_CONTEXT_FILES: Array<{ agentType: AgentType; fileName: string; path: string[] }> = [
+  { agentType: 'claude', fileName: 'CLAUDE.md', path: ['.'] },
+  { agentType: 'opencode', fileName: 'AGENTS.md', path: ['.'] },
+  { agentType: 'gemini', fileName: 'GEMINI.md', path: ['.'] },
+  { agentType: 'aider', fileName: 'AIDER.md', path: ['.'] },
+  { agentType: 'cursor', fileName: 'rules.mdc', path: ['.cursor'] },
+  { agentType: 'cursor', fileName: 'context.md', path: ['.cursor'] },
+  { agentType: 'windsurf', fileName: 'rules.md', path: ['.windsurf'] },
+  { agentType: 'windsurf', fileName: 'context.md', path: ['.windsurf'] },
+  { agentType: 'opencode', fileName: 'instructions.md', path: ['.opencode'] },
+];
+
 // ─── Existing AI Context Files ────────────────────────────
 
 async function readExistingContext(folderPath: string): Promise<{
   claudeMd: string | null;
   claudeIgnore: string | null;
   commands: string[];
+  contextFiles: AgentContextFile[];
 }> {
   const [claudeMd, claudeIgnore] = await Promise.all([
     safeReadFile(join(folderPath, 'CLAUDE.md')),
@@ -275,7 +292,27 @@ async function readExistingContext(folderPath: string): Promise<{
     }
   }
 
-  return { claudeMd, claudeIgnore, commands };
+  // Detect all agent context files
+  const contextFiles: AgentContextFile[] = [];
+  for (const def of AGENT_CONTEXT_FILES) {
+    const filePath = join(folderPath, ...def.path, def.fileName);
+    if (existsSync(filePath)) {
+      const content = await safeReadFile(filePath);
+      // Only add if not already present (same agentType + fileName combo)
+      const alreadyAdded = contextFiles.some(
+        (f) => f.agentType === def.agentType && f.fileName === def.fileName
+      );
+      if (!alreadyAdded) {
+        contextFiles.push({
+          agentType: def.agentType,
+          fileName: def.fileName,
+          content,
+        });
+      }
+    }
+  }
+
+  return { claudeMd, claudeIgnore, commands, contextFiles };
 }
 
 // ─── Key Files ───────────────────────────────────────────
@@ -438,6 +475,7 @@ export async function scanRepository(folderPath: string): Promise<ProjectSnapsho
     totalSizeBytes: dirStats.totalSizeBytes,
     topFiles: dirStats.topFiles,
     noisyDirs: dirStats.noisyDirs,
+    existingContextFiles: context.contextFiles,
     existingClaudeMd: context.claudeMd,
     existingClaudeIgnore: context.claudeIgnore,
     existingCommands: context.commands,
