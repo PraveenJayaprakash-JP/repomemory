@@ -1,0 +1,25 @@
+{
+  "name": "repomemory-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "CLI for RepoMemory — scan, audit, generate AI context files from the terminal",
+  "bin": {
+    "repomemory": "./src/index.ts"
+  },
+  "scripts": {
+    "start": "tsx src/index.ts",
+    "dev": "tsx watch src/index.ts"
+  },
+  "dependencies": {
+    "commander": "^13.0.0",
+    "tsx": "^4.19.0",
+    "fast-glob": "^3.3.0",
+    "js-yaml": "^4.1.0",
+    "openai": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
+  }
+}

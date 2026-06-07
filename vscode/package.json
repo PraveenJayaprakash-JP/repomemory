@@ -1,0 +1,92 @@
+{
+  "name": "repomemory",
+  "displayName": "RepoMemory",
+  "description": "Scan, audit, and generate AI context files for any repository",
+  "version": "0.1.0",
+  "publisher": "repomemory",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onView:repomemorySidebar"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "repomemory",
+          "title": "RepoMemory",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "repomemory": [
+        {
+          "type": "tree",
+          "id": "repomemorySidebar",
+          "name": "Projects"
+        }
+      ]
+    },
+    "commands": [
+      {
+        "command": "repomemory.scan",
+        "title": "RepoMemory: Scan Repository"
+      },
+      {
+        "command": "repomemory.refresh",
+        "title": "RepoMemory: Refresh"
+      },
+      {
+        "command": "repomemory.openDashboard",
+        "title": "RepoMemory: Open Dashboard"
+      },
+      {
+        "command": "repomemory.generate",
+        "title": "RepoMemory: Generate Context Pack"
+      }
+    ],
+    "menus": {
+      "view/title": [
+        {
+          "command": "repomemory.scan",
+          "group": "navigation"
+        },
+        {
+          "command": "repomemory.refresh",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "repomemory.generate",
+          "group": "inline"
+        },
+        {
+          "command": "repomemory.openDashboard",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@types/vscode": "^1.85.0",
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.0",
+    "js-yaml": "^4.1.0"
+  }
+}

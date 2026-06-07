@@ -1,0 +1,15 @@
+{
+  "name": "sample-repo",
+  "version": "1.0.0",
+  "description": "Test fixture repo",
+  "dependencies": {
+    "next": "^15.0.0",
+    "react": "^19.0.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "test": "jest",
+    "lint": "eslint"
+  }
+}
