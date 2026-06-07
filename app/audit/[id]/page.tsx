@@ -195,31 +195,33 @@ export default function AuditPage() {
       <div className="mb-2" />
       <Separator />
 
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList variant="line" className="flex-wrap h-auto gap-1">
-          <TabsTrigger value="audit" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+      <div className="flex flex-col md:flex-row gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex flex-col md:flex-row gap-6 w-full" orientation="vertical">
+          <TabsList className="flex-row md:flex-col w-full md:w-44 shrink-0 h-auto md:h-fit gap-1 bg-transparent">
+          <TabsTrigger value="audit" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <ScrollText className="h-4 w-4" />
             Audit
           </TabsTrigger>
-          <TabsTrigger value="files" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+          <TabsTrigger value="files" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <FileText className="h-4 w-4" />
             Generated Files
           </TabsTrigger>
-          <TabsTrigger value="badge" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+          <TabsTrigger value="badge" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <ShieldCheck className="h-4 w-4" />
             Badge
           </TabsTrigger>
-          <TabsTrigger value="snapshot" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+          <TabsTrigger value="snapshot" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <Camera className="h-4 w-4" />
             Snapshot
           </TabsTrigger>
-          <TabsTrigger value="architecture" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+          <TabsTrigger value="architecture" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <Network className="h-4 w-4" />
             Architecture
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="audit" className="space-y-4 mt-4">
+        <div className="flex-1 min-w-0">
+          <TabsContent value="audit" className="space-y-4 mt-0">
           <div className="grid gap-4 md:grid-cols-2">
             <ScoreCard
               totalScore={scan.audit.totalScore}
@@ -259,18 +261,18 @@ export default function AuditPage() {
           </div>
         </TabsContent>
 
-        <TabsContent value="files" className="space-y-4 mt-4">
+        <TabsContent value="files" className="space-y-4 mt-0">
           <FilePreview files={files.length > 0 ? files : scan.generatedFiles} />
           {(files.length > 0 || scan.generatedFiles.length > 0) && (
             <ExportButton scanId={scan.id} />
           )}
         </TabsContent>
 
-        <TabsContent value="badge" className="space-y-4 mt-4">
+        <TabsContent value="badge" className="space-y-4 mt-0">
           <BadgeSnippet projectId={scan.projectId} score={scan.audit.totalScore} />
         </TabsContent>
 
-        <TabsContent value="snapshot" className="space-y-4 mt-4">
+        <TabsContent value="snapshot" className="space-y-4 mt-0">
           <Card>
             <CardHeader>
               <CardTitle className="text-lg">Repo Snapshot</CardTitle>
@@ -283,7 +285,7 @@ export default function AuditPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="architecture" className="space-y-4 mt-4">
+        <TabsContent value="architecture" className="space-y-4 mt-0">
           {(() => {
             const graph = buildArchitectureGraph(scan.snapshot);
             const summary = getGraphSummary(scan.snapshot);
@@ -354,7 +356,9 @@ export default function AuditPage() {
             );
           })()}
         </TabsContent>
-      </Tabs>
+      </div>
+        </Tabs>
+      </div>
     </div>
   );
 }

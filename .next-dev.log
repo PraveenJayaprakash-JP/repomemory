@@ -94,3 +94,23 @@
 ✓ Compiled in 97ms
  GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 267ms (next.js: 168ms, application-code: 99ms)
  GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 56ms (next.js: 4ms, application-code: 53ms)
+ GET / 200 in 181ms (next.js: 149ms, application-code: 32ms)
+ GET /api/projects 200 in 92ms (next.js: 69ms, application-code: 23ms)
+ GET /api/projects 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 37ms (next.js: 27ms, application-code: 10ms)
+ GET / 200 in 179ms (next.js: 4ms, application-code: 174ms)
+ GET /api/projects 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 30ms (next.js: 9ms, application-code: 21ms)
+ GET /api/scan/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 57ms (next.js: 45ms, application-code: 12ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 11ms (next.js: 3ms, application-code: 9ms)
+ GET /api/scan/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 12ms (next.js: 3ms, application-code: 9ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 14ms (next.js: 3ms, application-code: 10ms)
+✓ Compiled in 148ms
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 500 in 1024ms (next.js: 842ms, application-code: 183ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 500 in 28ms (next.js: 15ms, application-code: 13ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 500 in 21ms (next.js: 8ms, application-code: 13ms)
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 500 in 63ms (next.js: 52ms, application-code: 11ms)
+✓ Compiled in 59ms
+ GET /audit/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 76ms (next.js: 4ms, application-code: 71ms)
+ GET /api/scan/2fa7883e-dff5-42e3-a76d-cdd14f3fafc3 200 in 74ms (next.js: 60ms, application-code: 15ms)
+ GET /api/scans?projectId=365b81ab-34d3-456c-ae59-d56b9e8743e3 200 in 88ms (next.js: 74ms, application-code: 14ms)

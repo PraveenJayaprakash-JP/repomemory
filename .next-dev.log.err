@@ -1,2 +1,135 @@
 [browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
 [browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+[browser] Detected `scroll-behavior: smooth` on the `<html>` element. To disable smooth scrolling during route transitions, add `data-scroll-behavior="smooth"` to your <html> element. Learn more: https://nextjs.org/docs/messages/missing-data-scroll-behavior
+⨯ ./app/audit/[id]/page.tsx:361:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  [90m359 |[0m     </div>
+  [90m360 |[0m   );
+[31m[1m>[0m [90m361 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m362 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+⨯ ./app/audit/[id]/page.tsx:361:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  [90m359 |[0m     </div>
+  [90m360 |[0m   );
+[31m[1m>[0m [90m361 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m362 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+⨯ ./app/audit/[id]/page.tsx:361:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  [90m359 |[0m     </div>
+  [90m360 |[0m   );
+[31m[1m>[0m [90m361 |[0m }
+  [90m    |[0m [31m[1m^[0m
+  [90m362 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+[browser] Uncaught Error: ./app/audit/[id]/page.tsx:361:1
+Unexpected token. Did you mean `{'}'}` or `&rbrace;`?
+  359 |     </div>
+  360 |   );
+> 361 | }
+      | ^
+  362 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./app/audit/[id]/page.tsx:361:1)
+    at <unknown> (Error: (./app/audit/[id]/page.tsx:361:1)
+⨯ ./app/audit/[id]/page.tsx:359:14
+Expected '</', got 'jsx text'
+  [90m357 |[0m           })()}
+  [90m358 |[0m         </[33mTabsContent[0m>
+[31m[1m>[0m [90m359 |[0m       </[33mTabs[0m>
+  [90m    |[0m              [31m[1m^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^[0m
+[31m[1m>[0m [90m360 |[0m     </div>
+  [90m    |[0m [31m[1m^^^^[0m
+  [90m361 |[0m   );
+  [90m362 |[0m }
+  [90m363 |[0m
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+[browser] Uncaught Error: ./app/audit/[id]/page.tsx:359:14
+Expected '</', got 'jsx text'
+  357 |           })()}
+  358 |         </TabsContent>
+> 359 |       </Tabs>
+      |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 360 |     </div>
+      | ^^^^
+  361 |   );
+  362 | }
+  363 |
+
+Parsing ecmascript source code failed
+
+Import traces:
+  Client Component Browser:
+    ./app/audit/[id]/page.tsx [Client Component Browser]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+  Client Component SSR:
+    ./app/audit/[id]/page.tsx [Client Component SSR]
+    ./app/audit/[id]/page.tsx [Server Component]
+
+
+    at <unknown> (Error: ./app/audit/[id]/page.tsx:359:14)
+    at <unknown> (Error: (./app/audit/[id]/page.tsx:359:14)
