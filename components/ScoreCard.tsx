@@ -72,6 +72,16 @@ export default function ScoreCard({ totalScore, dimensions, badge }: ScoreCardPr
                 {dim.reason && (
                   <p className="text-xs text-muted-foreground mt-1.5 leading-relaxed">{dim.reason}</p>
                 )}
+                {dim.suggestions && dim.suggestions.length > 0 && (
+                  <ul className="mt-1.5 space-y-0.5">
+                    {dim.suggestions.map((suggestion, si) => (
+                      <li key={si} className="flex items-start gap-1.5 text-xs text-muted-foreground/80 leading-relaxed">
+                        <span className="mt-0.5 shrink-0 text-amber-500 dark:text-amber-400">→</span>
+                        <span>{suggestion}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
                 {index < dimensions.length - 1 && <Separator className="mt-4" />}
               </div>
             );

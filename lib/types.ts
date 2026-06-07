@@ -49,6 +49,7 @@ export interface AuditDimension {
   maxScore: number;
   score: number;
   reason: string;
+  suggestions: string[]; // actionable fix suggestions
 }
 
 /** Full audit result */
