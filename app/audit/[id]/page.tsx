@@ -12,8 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare } from 'lucide-react';
+import BadgeSnippet from '@/components/BadgeSnippet';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
+import { buildArchitectureGraph, getGraphSummary } from '@/lib/graph';
+import ArchGraph from '@/components/ArchGraph';
 
 function AuditSkeleton() {
   return (
@@ -194,7 +197,9 @@ export default function AuditPage() {
         <TabsList>
           <TabsTrigger value="audit">Audit</TabsTrigger>
           <TabsTrigger value="files">Generated Files</TabsTrigger>
+          <TabsTrigger value="badge">Badge</TabsTrigger>
           <TabsTrigger value="snapshot">Snapshot</TabsTrigger>
+          <TabsTrigger value="architecture">Architecture</TabsTrigger>
         </TabsList>
 
         <TabsContent value="audit" className="space-y-4 mt-4">
@@ -235,6 +240,10 @@ export default function AuditPage() {
           )}
         </TabsContent>
 
+        <TabsContent value="badge" className="space-y-4 mt-4">
+          <BadgeSnippet projectId={scan.projectId} score={scan.audit.totalScore} />
+        </TabsContent>
+
         <TabsContent value="snapshot" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
@@ -246,6 +255,78 @@ export default function AuditPage() {
               </pre>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="architecture" className="space-y-4 mt-4">
+          {(() => {
+            const graph = buildArchitectureGraph(scan.snapshot);
+            const summary = getGraphSummary(scan.snapshot);
+            return (
+              <>
+                <div className="flex flex-wrap items-center gap-3">
+                  <Card className="flex-1 min-w-[200px]">
+                    <CardContent className="py-3 flex items-center gap-3">
+                      <Network className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Modules </span>
+                        <span className="font-medium">{summary.moduleCount}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="flex-1 min-w-[200px]">
+                    <CardContent className="py-3 flex items-center gap-3">
+                      <FolderGit className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Directories </span>
+                        <span className="font-medium">{summary.dirCount}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  <Card className="flex-1 min-w-[200px]">
+                    <CardContent className="py-3 flex items-center gap-3">
+                      <Files className="h-4 w-4 text-muted-foreground shrink-0" />
+                      <div className="text-sm">
+                        <span className="text-muted-foreground">Files </span>
+                        <span className="font-medium">{summary.fileCount}</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                  {summary.databases.length > 0 && (
+                    <Card className="flex-1 min-w-[200px]">
+                      <CardContent className="py-3 flex items-center gap-3">
+                        <BarChart3 className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="text-sm">
+                          <span className="text-muted-foreground">Databases </span>
+                          <span className="font-medium">{summary.databases.join(', ')}</span>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
+                <p className="text-sm text-muted-foreground">
+                  {summary.moduleCount} modules detected across {summary.dirCount} directories
+                  {summary.framework !== 'Unknown' && summary.framework !== 'None'
+                    ? ` · Framework: ${summary.framework}`
+                    : ''}
+                  {summary.databases.length > 0
+                    ? ` · DB: ${summary.databases.join(', ')}`
+                    : ''}
+                  {summary.testingTools.length > 0
+                    ? ` · Testing: ${summary.testingTools.join(', ')}`
+                    : ''}
+                  .
+                </p>
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Dependency Map</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ArchGraph graph={graph} />
+                  </CardContent>
+                </Card>
+              </>
+            );
+          })()}
         </TabsContent>
       </Tabs>
     </div>
