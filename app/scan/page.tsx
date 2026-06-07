@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download, FileUp, Loader2, FolderGit, Files, BarChart3 } from 'lucide-react';
-import type { Scan, Project, GeneratedFile } from '@/lib/types';
+import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check } from 'lucide-react';
+import type { Scan, Project, GeneratedFile, AgentType } from '@/lib/types';
+import { AGENT_DISPLAY_NAMES, AGENT_FILE_MAP } from '@/lib/types';
 
 export default function ScanPage() {
   const router = useRouter();
@@ -26,6 +27,7 @@ export default function ScanPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [activeResultTab, setActiveResultTab] = useState('audit');
+  const [selectedAgents, setSelectedAgents] = useState<AgentType[]>(['claude']);
 
   const handleScan = async (folderPath: string) => {
     setLoading(true);
@@ -59,6 +61,17 @@ export default function ScanPage() {
     }
   };
 
+  const toggleAgent = (agent: AgentType) => {
+    setSelectedAgents((prev) => {
+      if (prev.includes(agent)) {
+        // Don't allow deselecting the last one
+        if (prev.length === 1) return prev;
+        return prev.filter((a) => a !== agent);
+      }
+      return [...prev, agent];
+    });
+  };
+
   const handleGenerate = async () => {
     if (!scan) return;
     setGenerating(true);
@@ -68,7 +81,7 @@ export default function ScanPage() {
       const res = await fetch('/api/generate', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ scanId: scan.id }),
+        body: JSON.stringify({ scanId: scan.id, agents: selectedAgents }),
       });
       const data = await res.json();
 
@@ -215,14 +228,55 @@ export default function ScanPage() {
               </Card>
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={handleGenerate} disabled={generating}>
-                {generating ? (
-                  <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
-                ) : (
-                  <><Download className="h-4 w-4 mr-2" />Generate Context Pack</>
-                )}
-              </Button>
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {(Object.keys(AGENT_DISPLAY_NAMES) as AgentType[]).map((agent) => {
+                  const isSelected = selectedAgents.includes(agent);
+                  const fileCount = AGENT_FILE_MAP[agent].length;
+                  return (
+                    <button
+                      key={agent}
+                      type="button"
+                      onClick={() => toggleAgent(agent)}
+                      disabled={generating}
+                      className={`
+                        inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-sm font-medium
+                        transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring
+                        ${isSelected
+                          ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+                          : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                        }
+                        disabled:opacity-50 disabled:cursor-not-allowed
+                      `}
+                    >
+                      <span
+                        className={`h-2 w-2 rounded-full ${
+                          agent === 'claude' ? 'bg-sky-400'
+                          : agent === 'cursor' ? 'bg-emerald-400'
+                          : agent === 'windsurf' ? 'bg-amber-400'
+                          : agent === 'gemini' ? 'bg-violet-400'
+                          : agent === 'opencode' ? 'bg-rose-400'
+                          : 'bg-cyan-400'
+                        }`}
+                      />
+                      <span>{AGENT_DISPLAY_NAMES[agent]}</span>
+                      <span className={`text-xs ${isSelected ? 'text-primary-foreground/70' : 'text-muted-foreground/70'}`}>
+                        {fileCount} file{fileCount !== 1 ? 's' : ''}
+                      </span>
+                      {isSelected && <Check className="h-3.5 w-3.5" />}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="flex flex-wrap gap-2">
+                <Button onClick={handleGenerate} disabled={generating}>
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+                  ) : (
+                    <><Download className="h-4 w-4 mr-2" />Generate Context Pack</>
+                  )}
+                </Button>
               {files.length > 0 && (
                 <>
                   <ExportButton scanId={scan.id} />
@@ -235,6 +289,7 @@ export default function ScanPage() {
                   </Button>
                 </>
               )}
+              </div>
             </div>
 
             {applyResult && (

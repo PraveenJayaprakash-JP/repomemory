@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import ScanCompare from '@/components/ScanCompare';
@@ -28,7 +28,15 @@ function CompareSkeleton() {
   );
 }
 
-export default function ComparePage() {
+export default function ComparePageWrapper() {
+  return (
+    <Suspense fallback={<CompareSkeleton />}>
+      <ComparePage />
+    </Suspense>
+  );
+}
+
+function ComparePage() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [scan1, setScan1] = useState<Scan | null>(null);

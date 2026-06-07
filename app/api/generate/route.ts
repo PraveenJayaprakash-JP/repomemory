@@ -3,14 +3,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getScan, saveScan } from '@/lib/storage';
 import { generateContextPack } from '@/lib/generator';
-import type { ApiResponse, GeneratedFile } from '@/lib/types';
+import type { ApiResponse, GeneratedFile, AgentType } from '@/lib/types';
 
 export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { scanId } = body;
+    const { scanId, agents } = body;
 
     if (!scanId || typeof scanId !== 'string') {
       return NextResponse.json<ApiResponse<never>>(
@@ -27,8 +27,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate agents if provided
+    const agentList: AgentType[] | undefined = Array.isArray(agents) && agents.length > 0
+      ? agents as AgentType[]
+      : undefined;
+
     // Generate the context pack
-    const files = await generateContextPack(scan.snapshot);
+    const files = await generateContextPack(scan.snapshot, { agents: agentList });
 
     // Save generated files to scan
     scan.generatedFiles = files;

@@ -128,3 +128,57 @@ export interface ApiResponse<T> {
   data?: T;
   error?: string;
 }
+
+// ---------------------------------------------------------------------------
+// Multi-agent support — configurable AI coding agent targets
+// ---------------------------------------------------------------------------
+
+/** Supported AI coding agent types */
+export type AgentType = 'claude' | 'cursor' | 'windsurf' | 'gemini' | 'opencode' | 'aider';
+
+/** Human-readable names for each agent */
+export const AGENT_DISPLAY_NAMES: Record<AgentType, string> = {
+  claude: 'Claude Code',
+  cursor: 'Cursor',
+  windsurf: 'Windsurf',
+  gemini: 'Gemini Code Assist',
+  opencode: 'OpenCode',
+  aider: 'Aider',
+};
+
+/** File descriptor for a single generated context file */
+export interface AgentFileDescriptor {
+  fileName: string;
+  description: string;
+}
+
+/** Maps each agent type to the context files it needs */
+export const AGENT_FILE_MAP: Record<AgentType, AgentFileDescriptor[]> = {
+  claude: [
+    { fileName: 'CLAUDE.md', description: 'Project context for Claude Code' },
+    { fileName: '.claudeignore', description: 'File exclusion rules for Claude' },
+    { fileName: 'commands/review.md', description: 'Code review command' },
+    { fileName: 'commands/test.md', description: 'Test command' },
+    { fileName: 'commands/deploy.md', description: 'Deploy command' },
+    { fileName: 'hooks/pre-commit.sh', description: 'Pre-commit hook' },
+  ],
+  cursor: [
+    { fileName: '.cursor/rules.mdc', description: 'Cursor AI project rules' },
+    { fileName: '.cursor/context.md', description: 'Project context for Cursor' },
+  ],
+  windsurf: [
+    { fileName: '.windsurf/rules.md', description: 'Windsurf AI project rules' },
+    { fileName: '.windsurf/context.md', description: 'Project context for Windsurf' },
+  ],
+  gemini: [
+    { fileName: 'GEMINI.md', description: 'Project context for Google Gemini Code Assist' },
+  ],
+  opencode: [
+    { fileName: 'AGENTS.md', description: 'Agent definitions for OpenCode' },
+    { fileName: '.opencode/instructions.md', description: 'OpenCode project instructions' },
+  ],
+  aider: [
+    { fileName: '.aider.conf.yml', description: 'Aider AI coding assistant config' },
+    { fileName: 'AIDER.md', description: 'Project context for Aider' },
+  ],
+};

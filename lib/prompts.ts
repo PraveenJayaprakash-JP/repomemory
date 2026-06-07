@@ -148,3 +148,317 @@ The hook should:
 Tone: practical, production-ready.
 Output: shell script content for hooks/pre-commit.sh (no markdown fences).`;
 }
+
+// ---------------------------------------------------------------------------
+// Cursor prompt builders
+// ---------------------------------------------------------------------------
+
+export const CURSOR_RULES_SYSTEM_PROMPT = `You are a senior engineer writing .cursor/rules.mdc for Cursor AI. Be precise, structured, and practical. Use MDC (Markdown with Directive Comments) format. Include frontmatter with description and globs. Rules must be actionable and specific to the project. No fluff, no filler.`;
+
+export const CURSOR_CONTEXT_SYSTEM_PROMPT = `You are a senior engineer writing a context.md file for Cursor AI. Be precise, structured, and practical. Provide project context that helps Cursor understand the codebase, conventions, and architecture. Use markdown headings and bullet lists. No fluff.`;
+
+export function buildCursorRulesPrompt(snapshot: ProjectSnapshot): string {
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write .cursor/rules.mdc for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+- Noisy dirs: ${snapshot.noisyDirs.join(', ') || 'none'}
+- Key files: ${snapshot.topFiles.slice(0, 15).join(', ') || 'none'}
+
+Requirements:
+- Use MDC format with frontmatter (description, globs)
+- Include rules for: code style, naming conventions, import ordering, error handling patterns
+- Add project-specific rules based on detected language and framework
+- Include file-specific rules where appropriate (e.g., different rules for test files)
+- Keep rules concise and actionable
+- No vague advice — every rule must be specific and enforceable
+
+Tone: precise, actionable.
+Output: MDC content for .cursor/rules.mdc.`;
+}
+
+export function buildCursorContextPrompt(snapshot: ProjectSnapshot): string {
+  const keyFilesList = snapshot.topFiles.length > 0
+    ? snapshot.topFiles.map(f => `- ${f}`).join('\n')
+    : 'No key files detected.';
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write a context.md for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+
+Key files:
+${keyFilesList}
+
+Noisy directories (exclude from context): ${snapshot.noisyDirs.join(', ') || 'none'}
+
+Requirements:
+- Provide a concise project overview: what it does, how it's structured
+- Document the architecture and key patterns
+- List important entry points and their purposes
+- Describe the testing strategy and how to run tests
+- Include build/dev/deploy commands
+- Note any non-obvious conventions or gotchas
+- Keep it practical — Cursor uses this to understand the codebase
+
+Tone: precise, structured, practical.
+Output: markdown content for .cursor/context.md.`;
+}
+
+// ---------------------------------------------------------------------------
+// Windsurf prompt builders
+// ---------------------------------------------------------------------------
+
+export const WINDSURF_RULES_SYSTEM_PROMPT = `You are a senior engineer writing .windsurf/rules.md for Windsurf AI. Be precise, structured, and practical. Use markdown format with clear sections. Rules must be actionable and specific to the project. No fluff, no filler.`;
+
+export const WINDSURF_CONTEXT_SYSTEM_PROMPT = `You are a senior engineer writing a context.md file for Windsurf AI. Be precise, structured, and practical. Provide project context that helps Windsurf understand the codebase, conventions, and architecture. Use markdown headings and bullet lists. No fluff.`;
+
+export function buildWindsurfRulesPrompt(snapshot: ProjectSnapshot): string {
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write .windsurf/rules.md for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+- Noisy dirs: ${snapshot.noisyDirs.join(', ') || 'none'}
+- Key files: ${snapshot.topFiles.slice(0, 15).join(', ') || 'none'}
+
+Requirements:
+- Use markdown format with clear sections
+- Include rules for: code style, naming conventions, import ordering, error handling
+- Add project-specific rules based on detected language and framework
+- Include rules for testing patterns and file organization
+- Keep rules concise and actionable
+- No vague advice — every rule must be specific and enforceable
+
+Tone: precise, actionable.
+Output: markdown content for .windsurf/rules.md.`;
+}
+
+export function buildWindsurfContextPrompt(snapshot: ProjectSnapshot): string {
+  const keyFilesList = snapshot.topFiles.length > 0
+    ? snapshot.topFiles.map(f => `- ${f}`).join('\n')
+    : 'No key files detected.';
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write a context.md for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+
+Key files:
+${keyFilesList}
+
+Noisy directories (exclude from context): ${snapshot.noisyDirs.join(', ') || 'none'}
+
+Requirements:
+- Provide a concise project overview: what it does, how it's structured
+- Document the architecture and key patterns
+- List important entry points and their purposes
+- Describe the testing strategy and how to run tests
+- Include build/dev/deploy commands
+- Note any non-obvious conventions or gotchas
+- Keep it practical — Windsurf uses this to understand the codebase
+
+Tone: precise, structured, practical.
+Output: markdown content for .windsurf/context.md.`;
+}
+
+// ---------------------------------------------------------------------------
+// Gemini prompt builder
+// ---------------------------------------------------------------------------
+
+export const GEMINI_SYSTEM_PROMPT = `You are a senior engineer writing a GEMINI.md project context file for Google Gemini Code Assist. Be precise, structured, and practical. Use markdown headings, bullet lists, and code blocks. Every section must contain actionable, concrete information — not vague advice. Prefer specific commands over descriptions. Prefer file paths over general references. Omit sections that would be empty.`;
+
+export function buildGeminiPrompt(snapshot: ProjectSnapshot): string {
+  const keyFilesList = snapshot.topFiles.length > 0
+    ? snapshot.topFiles.map(f => `- ${f}`).join('\n')
+    : 'No key files detected.';
+
+  const existingNote = snapshot.existingClaudeMd
+    ? `\nAn existing CLAUDE.md was found. Use it as reference but write for Gemini's conventions.\n`
+    : '';
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write a complete GEMINI.md for the project "${snapshot.repoName}".
+${existingNote}
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+
+Key files:
+${keyFilesList}
+
+Noisy directories (exclude from context): ${snapshot.noisyDirs.join(', ') || 'none'}
+
+Requirements:
+- Project overview: what it does, target users, core value proposition
+- Architecture: directory structure, key modules, data flow
+- Tech stack: language, framework, key dependencies with versions
+- Development setup: prerequisites, install commands, env setup
+- Build & run: build, dev, test, lint commands
+- Code conventions: naming, formatting, import ordering, error handling
+- Testing strategy: framework, file location, run commands, coverage
+- Common tasks: adding features, debugging, deployment
+- Known gotchas: non-obvious behaviors, common mistakes
+
+Tone: precise, structured, practical. No fluff.
+Output: markdown content for GEMINI.md.`;
+}
+
+// ---------------------------------------------------------------------------
+// OpenCode prompt builders
+// ---------------------------------------------------------------------------
+
+export const OPENCODE_AGENTS_SYSTEM_PROMPT = `You are a senior engineer writing an AGENTS.md file for OpenCode. Be precise, structured, and practical. Define agent configurations with clear roles, allowed tools, and model preferences. Use YAML frontmatter followed by markdown instructions. No fluff, no filler.`;
+
+export const OPENCODE_INSTRUCTIONS_SYSTEM_PROMPT = `You are a senior engineer writing project instructions for OpenCode (.opencode/instructions.md). Be precise, structured, and practical. Provide project-specific guidance that helps OpenCode agents work effectively. Use markdown headings and bullet lists. No fluff.`;
+
+export function buildOpenCodeAgentsPrompt(snapshot: ProjectSnapshot): string {
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write an AGENTS.md file for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Key files: ${snapshot.topFiles.slice(0, 15).join(', ') || 'none'}
+
+Requirements:
+- Define 2-4 specialized agents for this project type
+- Each agent needs: name, description, model preference, allowed tools, file access scope
+- Include a default/general-purpose agent
+- Agents should cover: code review, testing, deployment, and project-specific tasks
+- Use YAML frontmatter format for agent definitions
+- Follow with markdown instructions for each agent
+
+Tone: precise, actionable.
+Output: AGENTS.md content with YAML frontmatter and markdown instructions.`;
+}
+
+export function buildOpenCodeInstructionsPrompt(snapshot: ProjectSnapshot): string {
+  const keyFilesList = snapshot.topFiles.length > 0
+    ? snapshot.topFiles.map(f => `- ${f}`).join('\n')
+    : 'No key files detected.';
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write .opencode/instructions.md for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+
+Key files:
+${keyFilesList}
+
+Noisy directories: ${snapshot.noisyDirs.join(', ') || 'none'}
+
+Requirements:
+- Project overview and architecture
+- Code style and conventions
+- Testing instructions
+- Build and deployment commands
+- Common development workflows
+- Project-specific gotchas and non-obvious behaviors
+
+Tone: precise, structured, practical.
+Output: markdown content for .opencode/instructions.md.`;
+}
+
+// ---------------------------------------------------------------------------
+// Aider prompt builders
+// ---------------------------------------------------------------------------
+
+export const AIDER_CONFIG_SYSTEM_PROMPT = `You are a senior engineer writing an .aider.conf.yml configuration file for Aider AI coding assistant. Be precise and practical. Use valid YAML syntax. Configuration must be immediately usable. No fluff.`;
+
+export const AIDER_CONTEXT_SYSTEM_PROMPT = `You are a senior engineer writing an AIDER.md project context file for Aider AI coding assistant. Be precise, structured, and practical. Use markdown headings, bullet lists, and code blocks. Every section must contain actionable, concrete information. No fluff.`;
+
+export function buildAiderConfigPrompt(snapshot: ProjectSnapshot): string {
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write an .aider.conf.yml configuration file for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Noisy dirs: ${snapshot.noisyDirs.join(', ') || 'none'}
+- Key files: ${snapshot.topFiles.slice(0, 15).join(', ') || 'none'}
+
+Requirements:
+- Valid YAML configuration
+- Set appropriate model for the project language
+- Configure file watching patterns (include source, exclude noisy dirs)
+- Set linting commands appropriate for the language
+- Configure map tokens based on project size
+- Set reasonable defaults for the project type
+- Include comments explaining non-obvious settings
+
+Tone: precise, practical.
+Output: YAML content for .aider.conf.yml (no markdown fences).`;
+}
+
+export function buildAiderContextPrompt(snapshot: ProjectSnapshot): string {
+  const keyFilesList = snapshot.topFiles.length > 0
+    ? snapshot.topFiles.map(f => `- ${f}`).join('\n')
+    : 'No key files detected.';
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Write an AIDER.md for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(0)} KB
+
+Key files:
+${keyFilesList}
+
+Noisy directories (exclude from context): ${snapshot.noisyDirs.join(', ') || 'none'}
+
+Requirements:
+- Project overview: what it does, architecture, key patterns
+- Code conventions: naming, formatting, import style
+- Testing: how to run tests, where they live
+- Build and dev commands
+- Common gotchas and non-obvious behaviors
+- Keep it concise — Aider uses this for context window efficiency
+
+Tone: precise, structured, practical. No fluff.
+Output: markdown content for AIDER.md.`;
+}
