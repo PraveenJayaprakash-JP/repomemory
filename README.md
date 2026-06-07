@@ -122,7 +122,7 @@ Score your AI context files across **7 quality dimensions** (Architecture, Comma
 
 | Interface | What it does | Quick Start |
 |-----------|-------------|-------------|
-| 🌐 **Web App** | Full-featured dashboard with scan, audit, generate, compare | `npm run dev` → localhost:3000 |
+| 🌐 **Web App** | Full-featured dashboard with scan, audit, generate, compare | `npm run dev → localhost:3000\n\n**Live demo:** [repomemory-omega.vercel.app](https://repomemory-omega.vercel.app) |
 | 💻 **CLI** | Run scans, generate, and check from terminal | `npm run cli scan .` |
 | 🤖 **MCP Server** | Call RepoMemory tools from any AI agent | 8 tools, stdio transport |
 | 🖥️ **VS Code** | Sidebar panel with project tree + webview audit | Open `vscode/`, F5 |
@@ -142,7 +142,7 @@ npm install
 cp .env.example .env.local   # Add your AI API key
 
 # Start the web app
-npm run dev                   # → http://localhost:3000
+npm run dev → localhost:3000\n\n**Live demo:** [repomemory-omega.vercel.app](https://repomemory-omega.vercel.app)
 
 # Or use the CLI
 npm run cli scan /path/to/your/repo
@@ -322,4 +322,5 @@ MIT © [PraveenJayaprakash-JP](https://github.com/PraveenJayaprakash-JP)
     <a href="https://github.com/PraveenJayaprakash-JP/repomemory/discussions">Discussions</a>
   </p>
 </div>
+
 
