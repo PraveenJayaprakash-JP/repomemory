@@ -1,18 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { FolderOpen, Scan, Loader2, AlertCircle } from 'lucide-react';
+import { FolderOpen, Scan, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 
 interface FolderPickerProps {
   onScan: (folderPath: string) => void;
+  onDemo?: () => void;
   loading?: boolean;
+  demoLoading?: boolean;
 }
 
-export default function FolderPicker({ onScan, loading }: FolderPickerProps) {
+export default function FolderPicker({ onScan, onDemo, loading, demoLoading }: FolderPickerProps) {
   const [folderPath, setFolderPath] = useState('');
   const [error, setError] = useState('');
+  const [isLiveSite, setIsLiveSite] = useState(false);
+
+  useEffect(() => {
+    setIsLiveSite(
+      typeof window !== 'undefined' &&
+      !window.location.hostname.includes('localhost') &&
+      !window.location.hostname.includes('127.0.0.1')
+    );
+  }, []);
 
   const handleScan = () => {
     const trimmed = folderPath.trim();
@@ -53,6 +64,15 @@ export default function FolderPicker({ onScan, loading }: FolderPickerProps) {
             <><Scan className="h-4 w-4 mr-2" />Scan Repo</>
           )}
         </Button>
+        {isLiveSite && onDemo && (
+          <Button onClick={onDemo} disabled={demoLoading} variant="secondary">
+            {demoLoading ? (
+              <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Loading demo...</>
+            ) : (
+              <><Sparkles className="h-4 w-4 mr-2" />Try Demo</>
+            )}
+          </Button>
+        )}
       </div>
       
       {error && (

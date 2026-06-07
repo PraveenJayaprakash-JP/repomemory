@@ -25,6 +25,7 @@ export default function ScanPage() {
   const [generating, setGenerating] = useState(false);
   const [applying, setApplying] = useState(false);
   const [fixing, setFixing] = useState(false);
+  const [demoLoading, setDemoLoading] = useState(false);
   const [applyResult, setApplyResult] = useState<{ written: string[] } | null>(null);
   const [scan, setScan] = useState<Scan | null>(null);
   const [project, setProject] = useState<Project | null>(null);
@@ -73,6 +74,25 @@ export default function ScanPage() {
       }
       return [...prev, agent];
     });
+  };
+
+  const handleDemo = async () => {
+    setDemoLoading(true);
+    setScan(null);
+    setProject(null);
+    setFiles([]);
+    try {
+      const res = await fetch('/api/demo-scan');
+      const data = await res.json();
+      if (!data.ok) { toast.error(data.error ?? 'Demo failed'); return; }
+      setScan(data.data.scan);
+      setProject(data.data.project);
+      toast.success('Demo scan ready', { description: 'Showing sample Next.js project audit' });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Demo failed');
+    } finally {
+      setDemoLoading(false);
+    }
   };
 
   const handleGenerate = async () => {
@@ -170,7 +190,7 @@ export default function ScanPage() {
 
       <Card>
         <CardContent className="pt-6">
-          <FolderPicker onScan={handleScan} loading={loading} />
+          <FolderPicker onScan={handleScan} onDemo={handleDemo} loading={loading} demoLoading={demoLoading} />
         </CardContent>
       </Card>
 
