@@ -1,7 +1,8 @@
 <div align="center">
   <h1>🧠 RepoMemory</h1>
   <p><strong>Project Intelligence Platform for AI Coding Agents</strong></p>
-  <p><em>SonarQube for AI Coding Agents — Scan -> Audit -> Generate -> Monitor -> Detect Drift -> Repair -> Learn</em></p>
+  <p><em>SonarQube for AI Coding Agents — Scan → Audit → Generate → Monitor → Detect Drift → Repair → Learn</em></p>
+
   <p>
     <a href="https://github.com/PraveenJayaprakash-JP/repomemory/actions"><img src="https://img.shields.io/github/actions/workflow/status/PraveenJayaprakash-JP/repomemory/ci.yml?branch=master&style=flat-square&label=CI" alt="CI"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square" alt="License"></a>
@@ -9,10 +10,14 @@
     <img src="https://img.shields.io/badge/Next.js_15-000000?style=flat-square&logo=next.js&logoColor=white" alt="Next.js">
     <img src="https://img.shields.io/badge/PRs-welcome-brightgreen?style=flat-square" alt="PRs Welcome">
   </p>
+
   <br>
+
   <img src="https://raw.githubusercontent.com/PraveenJayaprakash-JP/repomemory/master/public/screenshots/audit-results.png" alt="RepoMemory" width="800">
+
   <br>
   <br>
+
   <p>
     <b>Web App</b> ⋅
     <b>CLI</b> ⋅
@@ -20,16 +25,34 @@
     <b>VS Code Extension</b> ⋅
     <b>GitHub Action</b>
   </p>
+
   <br>
 </div>
+
 ---
+
 ## 🎯 The Problem
+
 AI coding agents are only as good as the context they receive. Yet the files that control that context — `CLAUDE.md`, `.claudeignore`, `AGENTS.md`, `CURSOR.md` — are maintained manually, inconsistently, and with no tooling support. When your code evolves but your context files don't, your AI agent works with outdated information.
+
 **RepoMemory solves this.** It's the first tool that treats AI context quality as a product — automatically scanning, auditing, generating, and monitoring the intelligence layer of your repositories.
+
 ---
+
+## 🎥 Demo
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/PraveenJayaprakash-JP/repomemory/master/public/screenshots/demo.gif" alt="RepoMemory Demo" width="720">
+  <p><em>Scan → Audit → Generate in 5 seconds</em></p>
+</div>
+
+---
+
 ## ✨ Features
+
 ### 🔍 Multi-Agent Audit
 Score your AI context files across **7 quality dimensions** (Architecture, Commands, Conventions, Off-limits, Testing, Deployment, Freshness) for **6 AI coding agents**:
+
 | Agent | File | Score |
 |-------|------|-------|
 | <img src="https://img.shields.io/badge/Claude-000?style=flat-square&logo=anthropic&logoColor=white" height="20"> | `CLAUDE.md` | 0–100 |
@@ -38,7 +61,9 @@ Score your AI context files across **7 quality dimensions** (Architecture, Comma
 | <img src="https://img.shields.io/badge/Gemini-8E75B2?style=flat-square&logo=google&logoColor=white" height="20"> | `GEMINI.md` | 0–100 |
 | <img src="https://img.shields.io/badge/OpenCode-000?style=flat-square&logo=openai&logoColor=white" height="20"> | `AGENTS.md` | 0–100 |
 | <img src="https://img.shields.io/badge/Aider-000?style=flat-square&logo=python&logoColor=white" height="20"> | `AIDER.md` | 0–100 |
+
 ### 🧠 Core Capabilities
+
 <table>
   <tr>
     <td width="50%">
@@ -101,31 +126,36 @@ Score your AI context files across **7 quality dimensions** (Architecture, Comma
     </td>
   </tr>
 </table>
+
 ### 🔌 Integrations
+
 | Interface | What it does | Quick Start |
 |-----------|-------------|-------------|
-| 🌐 **Web App** | Full-featured dashboard with scan, audit, generate, compare | `npm run dev` -> localhost:3000 · [Live demo](https://repomemory-omega.vercel.app) |
+| 🌐 **Web App** | Full-featured dashboard with scan, audit, generate, compare | `npm run dev` → localhost:3000 · [Live demo](https://repomemory-omega.vercel.app) |
 | 💻 **CLI** | Run scans, generate, and check from terminal | `npm run cli scan .` |
 | 🤖 **MCP Server** | Call RepoMemory tools from any AI agent | 8 tools, stdio transport |
 | 🖥️ **VS Code** | Sidebar panel with project tree + webview audit | Open `vscode/`, F5 |
 | 🔄 **GitHub Action** | Auto-check PRs for context drift | `uses: ./github/actions/repomemory-check` |
+
 ---
+
 ## 🚀 Quick Start
+
 ```bash
 # Clone
 git clone https://github.com/PraveenJayaprakash-JP/repomemory.git
 cd repomemory
+
 # Install & configure
 npm install
 cp .env.example .env.local   # Add your AI API key
+
 # Start the web app
-npm run dev
-```
+npm run dev                   # → http://localhost:3000
 
-**Live demo:** [repomemory-omega.vercel.app](https://repomemory-omega.vercel.app)
+# Live demo: https://repomemory-omega.vercel.app
 
-### 💻 CLI
-```bash
+# Or use the CLI
 npm run cli scan /path/to/your/repo
 npm run cli generate /path/to/your/repo --apply
 ```
@@ -135,8 +165,11 @@ npm run cli generate /path/to/your/repo --apply
 # Generate + apply all context files in one command
 npm run cli generate /path/to/repo --apply
 ```
+
 ### 🤖 MCP for AI Agents
+
 Add to your `opencode.json` or `claude_desktop_config.json`:
+
 ```json
 {
   "mcpServers": {
@@ -148,7 +181,9 @@ Add to your `opencode.json` or `claude_desktop_config.json`:
   }
 }
 ```
+
 **Available MCP tools:**
+
 | Tool | Description |
 |------|-------------|
 | `scan_repo` | Scan + audit a repo folder |
@@ -159,13 +194,6 @@ Add to your `opencode.json` or `claude_desktop_config.json`:
 | `suggest_context_updates` | Get recommendations |
 | `repo_health` | Overall health score |
 | `explain_codebase` | Comprehensive codebase explanation |
----
-## Demo
-
-<div align="center">
-  <img src="https://raw.githubusercontent.com/PraveenJayaprakash-JP/repomemory/master/public/screenshots/demo.gif" alt="RepoMemory Demo" width="720">
-  <p><em>Scan to Generate in 5 seconds</em></p>
-</div>
 
 ---
 
@@ -189,18 +217,24 @@ Add to your `opencode.json` or `claude_desktop_config.json`:
     </tr>
   </table>
 </div>
+
 ---
+
 ## ⚙️ Configuration
+
 | Variable | Default | Description |
 |---|---|---|
 | `AI_PROVIDER_API_KEY` | — | Your AI provider API key |
 | `AI_PROVIDER_BASE_URL` | `https://opencode.ai/zen/go/v1` | OpenAI-compatible endpoint |
 | `AI_MODEL` | `deepseek-v4-flash` | Model for generation tasks |
+
 ---
+
 ## 🏗️ Architecture
+
 ```
 repomemory/
-├── app/              # Next.js 15 — 15 routes across 7 pages
+├── app/              # Next.js 15 — 16 routes across 7 pages
 ├── lib/              # 15 core modules
 │   ├── scanner.ts    # File system traversal + detection
 │   ├── auditor.ts    # 7-dimension quality scoring
@@ -222,9 +256,13 @@ repomemory/
 ├── .github/          # GitHub Action + CI workflow
 └── tests/            # 24 unit tests
 ```
+
 ---
+
 ## 🔄 CI Integration
+
 Add to your GitHub Actions workflow:
+
 ```yaml
 - name: Check AI Context
   uses: PraveenJayaprakash-JP/repomemory/.github/actions/repomemory-check@main
@@ -233,22 +271,29 @@ Add to your GitHub Actions workflow:
     fail-on-drift: true
     min-score: 60
 ```
+
 This checks every PR for:
 - ✅ AI Readiness score
 - ✅ Context drift detection
 - ✅ Risk level assessment
 - ✅ Automatic PR comments with findings
 - ✅ CI/CD enforcement (optional min-score gate)
+
 ---
+
 ## 🛠️ Development
+
 ```bash
 npm test              # 24 unit tests
 npm run build         # Production build (2.5s, 16 routes)
 npm run cli -- scan . # Scan this repo
 npm run cli -- generate . --apply  # Generate context for this repo
 ```
+
 ---
+
 ## 🗺️ Roadmap
+
 - [x] Multi-agent context generation (6 AI agents)
 - [x] Advanced drift detection with risk scoring
 - [x] Architecture discovery engine
@@ -259,18 +304,27 @@ npm run cli -- generate . --apply  # Generate context for this repo
 - [ ] Team dashboard with multi-repo support
 - [ ] VSCode marketplace release
 - [ ] GitHub marketplace action
+
 ---
+
 ## 🤝 Contributing
+
 PRs welcome! RepoMemory is built with OpenCode Go — the same AI coding agent it helps configure.
+
 1. Fork the repo
 2. Create your feature branch: `git checkout -b feat/amazing`
 3. Commit: `git commit -m 'feat: add amazing feature'`
 4. Push: `git push origin feat/amazing`
 5. Open a PR
+
 ---
+
 ## 📄 License
+
 MIT © [PraveenJayaprakash-JP](https://github.com/PraveenJayaprakash-JP)
+
 ---
+
 <div align="center">
   <p><strong>⭐ Star us on GitHub — it helps more developers discover RepoMemory</strong></p>
   <p>
@@ -279,6 +333,3 @@ MIT © [PraveenJayaprakash-JP](https://github.com/PraveenJayaprakash-JP)
     <a href="https://github.com/PraveenJayaprakash-JP/repomemory/discussions">Discussions</a>
   </p>
 </div>
-
-
-
