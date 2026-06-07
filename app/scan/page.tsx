@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import FolderPicker from '@/components/FolderPicker';
 import ScoreCard from '@/components/ScoreCard';
 import FilePreview from '@/components/FilePreview';
@@ -11,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Skeleton } from '@/components/ui/skeleton';
 import { Download, FileUp, Loader2, FolderGit, Files, BarChart3 } from 'lucide-react';
 import type { Scan, Project, GeneratedFile } from '@/lib/types';
 
@@ -22,13 +24,11 @@ export default function ScanPage() {
   const [applyResult, setApplyResult] = useState<{ written: string[] } | null>(null);
   const [scan, setScan] = useState<Scan | null>(null);
   const [project, setProject] = useState<Project | null>(null);
-  const [error, setError] = useState('');
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [activeResultTab, setActiveResultTab] = useState('audit');
 
   const handleScan = async (folderPath: string) => {
     setLoading(true);
-    setError('');
     setScan(null);
     setProject(null);
     setFiles([]);
@@ -43,14 +43,17 @@ export default function ScanPage() {
       const data = await res.json();
 
       if (!data.ok) {
-        setError(data.error ?? 'Scan failed');
+        toast.error(data.error ?? 'Scan failed');
         return;
       }
 
       setScan(data.data.scan);
       setProject(data.data.project);
+      toast.success('Scan complete', {
+        description: `Scanned ${data.data.scan.snapshot.fileCount} files`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error');
+      toast.error(err instanceof Error ? err.message : 'Network error');
     } finally {
       setLoading(false);
     }
@@ -59,6 +62,7 @@ export default function ScanPage() {
   const handleGenerate = async () => {
     if (!scan) return;
     setGenerating(true);
+    const loadingToast = toast.loading('Generating context pack...');
 
     try {
       const res = await fetch('/api/generate', {
@@ -69,14 +73,20 @@ export default function ScanPage() {
       const data = await res.json();
 
       if (!data.ok) {
-        setError(data.error ?? 'Generation failed');
+        toast.dismiss(loadingToast);
+        toast.error(data.error ?? 'Generation failed');
         return;
       }
 
       setFiles(data.data.files);
       setActiveResultTab('files');
+      toast.dismiss(loadingToast);
+      toast.success('Generation complete', {
+        description: `${data.data.files.length} files generated`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Network error');
+      toast.dismiss(loadingToast);
+      toast.error(err instanceof Error ? err.message : 'Network error');
     } finally {
       setGenerating(false);
     }
@@ -95,8 +105,11 @@ export default function ScanPage() {
       const data = await res.json();
       if (!data.ok) throw new Error(data.error);
       setApplyResult(data.data);
+      toast.success('Applied to repo', {
+        description: `Written ${data.data.written.length} file${data.data.written.length !== 1 ? 's' : ''}`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Apply failed');
+      toast.error(err instanceof Error ? err.message : 'Apply failed');
     } finally {
       setApplying(false);
     }
@@ -118,22 +131,28 @@ export default function ScanPage() {
       </Card>
 
       {loading && (
-        <Card>
-          <CardContent className="py-8">
-            <div className="flex items-center justify-center gap-3 text-muted-foreground">
-              <Loader2 className="h-5 w-5 animate-spin" />
-              <span className="text-sm font-medium">Scanning repository...</span>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      {error && !loading && (
-        <Card className="border-[var(--error-border)] bg-[var(--error-bg)]">
-          <CardContent className="py-4">
-            <p className="text-sm font-medium text-[var(--score-critical)]">{error}</p>
-          </CardContent>
-        </Card>
+        <div className="space-y-4">
+          <Card>
+            <CardContent className="py-8">
+              <div className="flex items-center justify-center gap-3 text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin" />
+                <span className="text-sm font-medium">Scanning repository...</span>
+              </div>
+            </CardContent>
+          </Card>
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card><CardContent className="py-8 space-y-4">
+              <Skeleton className="h-6 w-32" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-3/4" />
+            </CardContent></Card>
+            <Card><CardContent className="py-8 space-y-4">
+              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-4 w-full" />
+              <Skeleton className="h-4 w-5/6" />
+            </CardContent></Card>
+          </div>
+        </div>
       )}
 
       {project && scan && (

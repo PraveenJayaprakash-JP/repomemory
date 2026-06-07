@@ -1,12 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Scan, History, ArrowRight, FolderGit, BarChart3 } from 'lucide-react';
+
+import { Scan, History, ArrowRight, FolderGit, BarChart3, X } from 'lucide-react';
+import ScoreTimeline from '@/components/ScoreTimeline';
 
 interface EnrichedProject {
   id: string;
@@ -50,19 +52,60 @@ function ProjectSkeleton() {
   );
 }
 
+interface ScanData {
+  id: string;
+  createdAt: string;
+  totalScore: number;
+  badge: string;
+  fileCount: number;
+}
+
 export default function Dashboard() {
   const [projects, setProjects] = useState<EnrichedProject[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  const [timelineScans, setTimelineScans] = useState<ScanData[]>([]);
+  const [timelineLoading, setTimelineLoading] = useState(false);
 
   useEffect(() => {
     fetch('/api/projects')
       .then((r) => r.json())
       .then((res) => {
-        if (res.ok) setProjects(res.data ?? []);
+        if (res.ok) {
+          setProjects(res.data ?? []);
+        } else {
+          toast.error(res.error ?? 'Failed to load projects');
+        }
       })
-      .catch(console.error)
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to load projects');
+      })
       .finally(() => setLoading(false));
   }, []);
+
+  const handleProjectClick = useCallback((projectId: string) => {
+    if (selectedProjectId === projectId) {
+      setSelectedProjectId(null);
+      setTimelineScans([]);
+      return;
+    }
+    setSelectedProjectId(projectId);
+    setTimelineLoading(true);
+    setTimelineScans([]);
+    fetch(`/api/scans?projectId=${encodeURIComponent(projectId)}`)
+      .then((r) => r.json())
+      .then((res) => {
+        if (res.ok) {
+          setTimelineScans(res.data.scans ?? []);
+        } else {
+          toast.error(res.error ?? 'Failed to load scan history');
+        }
+      })
+      .catch((err) => {
+        toast.error(err instanceof Error ? err.message : 'Failed to load scan history');
+      })
+      .finally(() => setTimelineLoading(false));
+  }, [selectedProjectId]);
 
   return (
     <div className="space-y-6">
@@ -113,9 +156,15 @@ export default function Dashboard() {
         <div className="grid gap-3">
           {projects.map((p) => {
             const badge = badgeForScore(p.lastScore);
+            const isSelected = selectedProjectId === p.id;
             return (
-              <Link key={p.id} href={`/audit/${p.latestScanId}`} className="group">
-                <Card className="transition-default hover:shadow-md hover:border-border/80 cursor-pointer">
+              <div key={p.id}>
+                <Card
+                  className={`transition-default hover:shadow-md cursor-pointer ${
+                    isSelected ? 'border-primary ring-1 ring-primary/20' : 'hover:border-border/80'
+                  }`}
+                  onClick={() => handleProjectClick(p.id)}
+                >
                   <CardContent className="flex items-center justify-between py-4">
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2 mb-1">
@@ -142,10 +191,43 @@ export default function Dashboard() {
                         )}
                       </div>
                     </div>
-                    <ArrowRight className="h-4 w-4 text-muted-foreground shrink-0 ml-4 transition-default group-hover:text-foreground group-hover:translate-x-0.5" />
+                    <div className="flex items-center gap-2 shrink-0 ml-4">
+                      <BarChart3 className="h-4 w-4 text-muted-foreground" />
+                      <ArrowRight className="h-4 w-4 text-muted-foreground transition-default group-hover:text-foreground group-hover:translate-x-0.5" />
+                    </div>
                   </CardContent>
                 </Card>
-              </Link>
+                {isSelected && (
+                  <Card className="mt-2">
+                    <CardHeader className="pb-2 flex-row items-center justify-between space-y-0">
+                      <CardTitle className="text-sm font-medium">
+                        Score Timeline — {p.repoName}
+                      </CardTitle>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-6 w-6"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedProjectId(null);
+                          setTimelineScans([]);
+                        }}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </CardHeader>
+                    <CardContent>
+                      {timelineLoading ? (
+                        <div className="flex items-center justify-center h-[200px] text-sm text-muted-foreground">
+                          Loading timeline...
+                        </div>
+                      ) : (
+                        <ScoreTimeline scans={timelineScans} />
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
             );
           })}
         </div>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import ScoreCard from '@/components/ScoreCard';
 import FilePreview from '@/components/FilePreview';
 import DriftAlert from '@/components/DriftAlert';
@@ -56,7 +57,9 @@ export default function AuditPage() {
         if (!data.ok) throw new Error(data.error || 'Scan not found');
         setScan(data.data);
       } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load');
+        const message = err instanceof Error ? err.message : 'Failed to load';
+        setError(message);
+        toast.error(message);
       } finally {
         setLoading(false);
       }
@@ -67,6 +70,7 @@ export default function AuditPage() {
   const handleGenerate = async () => {
     if (!scan) return;
     setGenerating(true);
+    const loadingToast = toast.loading('Generating context pack...');
     try {
       const res = await fetch('/api/generate', {
         method: 'POST',
@@ -77,8 +81,15 @@ export default function AuditPage() {
       if (!data.ok) throw new Error(data.error);
       setFiles(data.data.files);
       setActiveTab('files');
+      toast.dismiss(loadingToast);
+      toast.success('Generation complete', {
+        description: `${data.data.files.length} files generated`,
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Generation failed');
+      toast.dismiss(loadingToast);
+      const message = err instanceof Error ? err.message : 'Generation failed';
+      setError(message);
+      toast.error(message);
     } finally {
       setGenerating(false);
     }
