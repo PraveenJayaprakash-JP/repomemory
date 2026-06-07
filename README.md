@@ -160,6 +160,15 @@ Add to your `opencode.json` or `claude_desktop_config.json`:
 | `repo_health` | Overall health score |
 | `explain_codebase` | Comprehensive codebase explanation |
 ---
+## Demo
+
+<div align="center">
+  <img src="https://raw.githubusercontent.com/PraveenJayaprakash-JP/repomemory/master/public/screenshots/demo.gif" alt="RepoMemory Demo" width="720">
+  <p><em>Scan to Generate in 5 seconds</em></p>
+</div>
+
+---
+
 ## 📸 Screenshots
 
 <div align="center">
