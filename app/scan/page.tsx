@@ -13,7 +13,7 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check } from 'lucide-react';
+import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check, ScrollText, FileText } from 'lucide-react';
 import type { Scan, Project, GeneratedFile, AgentType } from '@/lib/types';
 import { AGENT_DISPLAY_NAMES, AGENT_FILE_MAP } from '@/lib/types';
 
@@ -204,9 +204,15 @@ export default function ScanPage() {
 
       {scan && (
         <Tabs value={activeResultTab} onValueChange={setActiveResultTab}>
-          <TabsList>
-            <TabsTrigger value="audit">Audit Results</TabsTrigger>
-            <TabsTrigger value="files">Generated Files</TabsTrigger>
+          <TabsList variant="line" className="flex-wrap h-auto gap-1">
+            <TabsTrigger value="audit" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+              <ScrollText className="h-4 w-4" />
+              Audit Results
+            </TabsTrigger>
+            <TabsTrigger value="files" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+              <FileText className="h-4 w-4" />
+              Generated Files
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="audit" className="space-y-4 mt-4">

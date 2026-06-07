@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import BadgeSnippet from '@/components/BadgeSnippet';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network } from 'lucide-react';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
 import { buildArchitectureGraph, getGraphSummary } from '@/lib/graph';
 import ArchGraph from '@/components/ArchGraph';
@@ -192,14 +192,31 @@ export default function AuditPage() {
           </CardContent>
         </Card>
       </div>
+      <div className="mb-2" />
+      <Separator />
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList>
-          <TabsTrigger value="audit">Audit</TabsTrigger>
-          <TabsTrigger value="files">Generated Files</TabsTrigger>
-          <TabsTrigger value="badge">Badge</TabsTrigger>
-          <TabsTrigger value="snapshot">Snapshot</TabsTrigger>
-          <TabsTrigger value="architecture">Architecture</TabsTrigger>
+        <TabsList variant="line" className="flex-wrap h-auto gap-1">
+          <TabsTrigger value="audit" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+            <ScrollText className="h-4 w-4" />
+            Audit
+          </TabsTrigger>
+          <TabsTrigger value="files" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+            <FileText className="h-4 w-4" />
+            Generated Files
+          </TabsTrigger>
+          <TabsTrigger value="badge" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+            <ShieldCheck className="h-4 w-4" />
+            Badge
+          </TabsTrigger>
+          <TabsTrigger value="snapshot" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+            <Camera className="h-4 w-4" />
+            Snapshot
+          </TabsTrigger>
+          <TabsTrigger value="architecture" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+            <Network className="h-4 w-4" />
+            Architecture
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="audit" className="space-y-4 mt-4">
@@ -208,6 +225,15 @@ export default function AuditPage() {
               totalScore={scan.audit.totalScore}
               dimensions={scan.audit.dimensions}
               badge={scan.audit.badge}
+              cta={
+                <Button onClick={handleGenerate} disabled={generating} size="sm">
+                  {generating ? (
+                    <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+                  ) : (
+                    <><Download className="h-4 w-4 mr-2" />Generate Context Pack</>
+                  )}
+                </Button>
+              }
             />
             <Card className="transition-default hover:shadow-sm">
               <CardHeader>
