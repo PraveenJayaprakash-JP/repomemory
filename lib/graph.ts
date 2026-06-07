@@ -3,6 +3,7 @@
 // showing module relationships across the codebase.
 
 import type { ProjectSnapshot } from './types';
+import type { ArchitectureReport } from './discovery';
 
 export interface GraphNode {
   id: string;
@@ -178,7 +179,7 @@ function categorizeDir(name: string): DirCategory {
 
 // ─── Main builder ───────────────────────────────────────────
 
-export function buildArchitectureGraph(snapshot: ProjectSnapshot): ArchitectureGraph {
+export function buildArchitectureGraph(snapshot: ProjectSnapshot, report?: ArchitectureReport): ArchitectureGraph {
   const nodes: GraphNode[] = [];
   const edges: GraphEdge[] = [];
   const tech = inferTechStack(snapshot.keyFiles.packageJson);
@@ -423,6 +424,64 @@ export function buildArchitectureGraph(snapshot: ProjectSnapshot): ArchitectureG
       nodes.push(rtNode);
       frameworkNode.children!.push(rtNode);
       edges.push({ source: frameworkNode.id, target: rtId, label: 'dep' });
+    }
+  }
+
+  // ── Enrich with ArchitectureReport if provided ──
+  if (report) {
+    // Add service nodes from discovery report
+    for (const svc of report.services) {
+      const svcId = `svc-${svc.name.toLowerCase().replace(/\s+/g, '-')}`;
+      // Avoid duplicate nodes
+      if (!nodes.some(n => n.id === svcId)) {
+        const svcNode: GraphNode = {
+          id: svcId,
+          label: `${svc.name} (${svc.type})`,
+          type: 'service',
+        };
+        nodes.push(svcNode);
+        // Connect service to its category
+        const catMap: Record<string, string> = {
+          api: 'cat-backend',
+          worker: 'cat-backend',
+          cron: 'cat-backend',
+          webhook: 'cat-backend',
+        };
+        const targetCat = catMap[svc.type] ?? 'cat-backend';
+        const catNode = nodes.find(n => n.id === targetCat);
+        if (catNode) {
+          catNode.children!.push(svcNode);
+          edges.push({ source: targetCat, target: svcId, label: svc.type });
+        }
+      }
+    }
+
+    // Add data flow edges from discovery report
+    for (const flow of report.dataFlows) {
+      const srcId = `svc-${flow.from.toLowerCase().replace(/\s+/g, '-')}`;
+      const tgtId = `svc-${flow.to.toLowerCase().replace(/\s+/g, '-')}`;
+      // Only add if both endpoints exist as nodes
+      if (nodes.some(n => n.id === srcId) && nodes.some(n => n.id === tgtId)) {
+        edges.push({ source: srcId, target: tgtId, label: flow.type });
+      }
+    }
+
+    // Add tech stack nodes from report
+    const allTech = [
+      ...report.techStack.frontend,
+      ...report.techStack.backend,
+      ...report.techStack.database,
+      ...report.techStack.infrastructure,
+      ...report.techStack.testing,
+    ];
+    for (const tech of allTech) {
+      const techId = `tech-${tech.toLowerCase().replace(/\s+/g, '-')}`;
+      if (!nodes.some(n => n.id === techId)) {
+        const techNode: GraphNode = { id: techId, label: tech, type: 'service' };
+        nodes.push(techNode);
+        frameworkNode.children!.push(techNode);
+        edges.push({ source: frameworkNode.id, target: techId, label: 'uses' });
+      }
     }
   }
 

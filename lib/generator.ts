@@ -3,6 +3,7 @@
 import type { ProjectSnapshot, GeneratedFile, AgentType } from './types';
 import { AGENT_FILE_MAP } from './types';
 import type { ContextChange } from './drift';
+import type { ArchitectureReport } from './discovery';
 import { generateText } from './ai';
 import {
   buildClaudeMdPrompt,
@@ -49,6 +50,8 @@ export interface GenerateOptions {
   changes?: ContextChange[];
   /** Existing generated files content for smart regeneration */
   existingFiles?: GeneratedFile[];
+  /** Optional architecture report to enrich AI prompts with module/service/data-flow context */
+  architectureReport?: ArchitectureReport;
 }
 
 // ---------------------------------------------------------------------------

@@ -13,8 +13,9 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check, ScrollText, FileText, Sparkles, GitCommitHorizontal } from 'lucide-react';
+import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check, ScrollText, FileText, Sparkles, GitCommitHorizontal, Brain } from 'lucide-react';
 import ChangeSummary from '@/components/ChangeSummary';
+import BrainPanel from '@/components/BrainPanel';
 import type { Scan, Project, GeneratedFile, AgentType } from '@/lib/types';
 import { AGENT_DISPLAY_NAMES, AGENT_FILE_MAP } from '@/lib/types';
 
@@ -247,6 +248,10 @@ export default function ScanPage() {
               <GitCommitHorizontal className="h-4 w-4" />
               Changes
             </TabsTrigger>
+            <TabsTrigger value="brain" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+              <Brain className="h-4 w-4" />
+              Brain
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="audit" className="space-y-4 mt-4">
@@ -370,6 +375,10 @@ export default function ScanPage() {
 
           <TabsContent value="changes" className="space-y-4 mt-4">
             <ChangeSummary folderPath={scan.snapshot.folderPath} />
+          </TabsContent>
+
+          <TabsContent value="brain" className="space-y-4 mt-4">
+            <BrainPanel folderPath={scan.snapshot.folderPath} />
           </TabsContent>
         </Tabs>
       )}

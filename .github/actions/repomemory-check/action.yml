@@ -21,10 +21,34 @@ inputs:
     description: 'Exit with error if drift is detected'
     required: false
     default: 'true'
+  min-score:
+    description: 'Minimum AI Readiness score (0-100). Build fails if score is below this threshold when fail-on-drift is true.'
+    required: false
+    default: '0'
   path:
     description: 'Path to the repository root'
     required: false
     default: ${{ github.workspace }}
+
+outputs:
+  drift:
+    description: 'Whether context drift was detected ("true" or "false")'
+    value: ${{ steps.check.outputs.drift }}
+  stale:
+    description: 'Comma-separated list of stale context files'
+    value: ${{ steps.check.outputs.stale }}
+  changed-total:
+    description: 'Number of changed files detected'
+    value: ${{ steps.check.outputs.changed_total }}
+  ai-score:
+    description: 'Numerical AI Readiness score (0-100)'
+    value: ${{ steps.check.outputs.ai_score }}
+  summary:
+    description: 'Text summary of findings'
+    value: ${{ steps.check.outputs.summary }}
+  drift-risk:
+    description: 'Drift risk level: low, medium, high, or critical'
+    value: ${{ steps.check.outputs.drift_risk }}
 
 runs:
   using: 'composite'
@@ -40,6 +64,20 @@ runs:
           npm install -g repomemory-cli 2>/dev/null || echo "Will use npx fallback"
         fi
 
+    - name: Validate inputs
+      shell: bash
+      run: |
+        # Validate min-score is a number in 0-100 range
+        MIN_SCORE="${{ inputs.min-score }}"
+        if ! echo "$MIN_SCORE" | grep -qE '^[0-9]+$'; then
+          echo "::error::min-score must be a number between 0 and 100, got: '$MIN_SCORE'"
+          exit 1
+        fi
+        if [ "$MIN_SCORE" -lt 0 ] || [ "$MIN_SCORE" -gt 100 ]; then
+          echo "::error::min-score must be between 0 and 100, got: $MIN_SCORE"
+          exit 1
+        fi
+
     - name: Run RepoMemory check
       shell: bash
       id: check
@@ -52,6 +90,12 @@ runs:
         STORE_DIR="${{ github.workspace }}/.repomemory"
         mkdir -p "$STORE_DIR"
         
+        # Validate required tools
+        if ! command -v jq &>/dev/null; then
+          echo "::error::jq is required but not installed. Add 'apt-get install -y jq' to your workflow."
+          exit 1
+        fi
+
         # Check if we have a previous scan
         RESULT=""
         if [ -f "$STORE_DIR/store.json" ]; then
@@ -64,31 +108,94 @@ runs:
           cd "${{ inputs.path }}" && npx --yes repomemory-cli scan . --json 2>/dev/null || true
           echo "Baseline scan complete."
           echo "drift=false" >> $GITHUB_OUTPUT
+          echo "ai_score=100" >> $GITHUB_OUTPUT
+          echo "summary=Baseline scan completed. No drift analysis available yet." >> $GITHUB_OUTPUT
+          echo "drift_risk=low" >> $GITHUB_OUTPUT
           exit 0
         fi
         
+        # Validate RESULT is valid JSON
+        if ! echo "$RESULT" | jq empty 2>/dev/null; then
+          echo "::error::RepoMemory CLI returned invalid JSON. Raw output: ${RESULT:0:200}"
+          echo "drift=false" >> $GITHUB_OUTPUT
+          echo "ai_score=0" >> $GITHUB_OUTPUT
+          echo "summary=Error: RepoMemory CLI returned invalid output." >> $GITHUB_OUTPUT
+          echo "drift_risk=critical" >> $GITHUB_OUTPUT
+          exit 1
+        fi
+
         HAS_DRIFT=$(echo "$RESULT" | jq -r '.hasDrift // false')
         STALE_FILES=$(echo "$RESULT" | jq -r '.staleContextFiles | join(", ") // "none"')
         CHANGED_TABLE=$(echo "$RESULT" | jq -r '.changedFiles[:20] | map("| `" + .path + "` | " + (.change // "modified") + " |") | join("\n") // ""')
         CHANGED_TOTAL=$(echo "$RESULT" | jq '.changedFiles | length // 0')
         
+        # Extract AI Readiness score (0-100)
+        AI_SCORE=$(echo "$RESULT" | jq -r '.aiReadinessScore // .score // .aiScore // 0')
+        # Ensure score is numeric and in range
+        if ! echo "$AI_SCORE" | grep -qE '^[0-9]+$'; then
+          AI_SCORE=0
+        fi
+        if [ "$AI_SCORE" -lt 0 ] 2>/dev/null; then AI_SCORE=0; fi
+        if [ "$AI_SCORE" -gt 100 ] 2>/dev/null; then AI_SCORE=100; fi
+
+        # Compute drift risk level
+        DRIFT_RISK="low"
+        if [ "$HAS_DRIFT" = "true" ]; then
+          if [ "$AI_SCORE" -ge 70 ]; then
+            DRIFT_RISK="medium"
+          elif [ "$AI_SCORE" -ge 40 ]; then
+            DRIFT_RISK="high"
+          else
+            DRIFT_RISK="critical"
+          fi
+        fi
+
+        # Build summary text
+        SUMMARY_PARTS=""
+        if [ "$HAS_DRIFT" = "true" ]; then
+          SUMMARY_PARTS="Context drift detected."
+          if [ "$STALE_FILES" != "none" ] && [ -n "$STALE_FILES" ]; then
+            SUMMARY_PARTS="$SUMMARY_PARTS Stale: $STALE_FILES."
+          fi
+          if [ "$CHANGED_TOTAL" -gt 0 ] 2>/dev/null; then
+            SUMMARY_PARTS="$SUMMARY_PARTS $CHANGED_TOTAL file(s) changed."
+          fi
+        else
+          SUMMARY_PARTS="No context drift detected. AI context is up to date."
+        fi
+
         echo "drift=$HAS_DRIFT" >> $GITHUB_OUTPUT
         echo "stale=$STALE_FILES" >> $GITHUB_OUTPUT
         echo "changed_count=$CHANGED_TABLE" >> $GITHUB_OUTPUT
         echo "changed_total=$CHANGED_TOTAL" >> $GITHUB_OUTPUT
+        echo "ai_score=$AI_SCORE" >> $GITHUB_OUTPUT
+        echo "summary=$SUMMARY_PARTS" >> $GITHUB_OUTPUT
+        echo "drift_risk=$DRIFT_RISK" >> $GITHUB_OUTPUT
         
-        if [ "$HAS_DRIFT" = "true" ]; then
-          echo "::warning::Context drift detected! Stale: $STALE_FILES"
-          echo "Run 'repomemory generate . --apply' to update context files."
-          if [ "${{ inputs.fail-on-drift }}" = "true" ]; then
+        # CI/CD Enforcement: fail if drift detected OR score below min-score
+        MIN_SCORE="${{ inputs.min-score }}"
+        FAIL_ON_DRIFT="${{ inputs.fail-on-drift }}"
+
+        if [ "$FAIL_ON_DRIFT" = "true" ]; then
+          if [ "$HAS_DRIFT" = "true" ]; then
+            echo "::error::Context drift detected (risk: $DRIFT_RISK, score: $AI_SCORE/100). Stale files: $STALE_FILES. Run 'repomemory generate . --apply' to fix."
+            exit 1
+          fi
+          if [ "$AI_SCORE" -lt "$MIN_SCORE" ] 2>/dev/null; then
+            echo "::error::AI Readiness score ($AI_SCORE) is below minimum threshold ($MIN_SCORE). Build failed by CI/CD enforcement."
             exit 1
           fi
         else
-          echo "No context drift detected."
+          if [ "$HAS_DRIFT" = "true" ]; then
+            echo "::warning::Context drift detected! Stale: $STALE_FILES"
+            echo "Run 'repomemory generate . --apply' to update context files."
+          else
+            echo "No context drift detected."
+          fi
         fi
 
     - name: Comment on PR
-      if: github.event_name == 'pull_request' && steps.check.outputs.drift == 'true'
+      if: github.event_name == 'pull_request'
       uses: actions/github-script@v7
       with:
         script: |
@@ -96,8 +203,25 @@ runs:
           const stale = '${{ steps.check.outputs.stale }}';
           const changedTable = `${{ steps.check.outputs.changed_count }}`;
           const changedTotal = parseInt('${{ steps.check.outputs.changed_total }}' || '0', 10);
+          const aiScore = parseInt('${{ steps.check.outputs.ai_score }}' || '0', 10);
+          const summary = '${{ steps.check.outputs.summary }}';
+          const driftRisk = '${{ steps.check.outputs.drift_risk }}';
 
-          if (drift !== 'true') return;
+          // Score label and emoji
+          let scoreLabel, scoreEmoji;
+          if (aiScore >= 90) { scoreLabel = 'Excellent'; scoreEmoji = '✅'; }
+          else if (aiScore >= 70) { scoreLabel = 'Needs Improvement'; scoreEmoji = '⚠️'; }
+          else if (aiScore >= 40) { scoreLabel = 'At Risk'; scoreEmoji = '🔴'; }
+          else { scoreLabel = 'Critical'; scoreEmoji = '🚨'; }
+
+          // Risk badge
+          const riskBadges = {
+            low: '![Low](https://img.shields.io/badge/drift-low-green)',
+            medium: '![Medium](https://img.shields.io/badge/drift-medium-yellow)',
+            high: '![High](https://img.shields.io/badge/drift-high-orange)',
+            critical: '![Critical](https://img.shields.io/badge/drift-critical-red)',
+          };
+          const riskBadge = riskBadges[driftRisk] || riskBadges.low;
 
           // Remove outdated bot comments
           const { data: comments } = await github.rest.issues.listComments({
@@ -114,6 +238,20 @@ runs:
             });
           }
 
+          // Build header
+          const header = [
+            '## RepoMemory AI Readiness Report',
+            '',
+            `**Score:** ${aiScore}/100 — ${scoreEmoji} ${scoreLabel}`,
+            `**Drift Risk:** ${riskBadge} ${driftRisk.charAt(0).toUpperCase() + driftRisk.slice(1)}`,
+          ];
+
+          // Stale context line
+          if (stale && stale !== 'none' && stale.trim()) {
+            header.push(`**Stale Context:** ${stale}`);
+          }
+          header.push('');
+
           // Build changed files section
           let changedSection = '';
           if (changedTable && changedTable.trim()) {
@@ -125,7 +263,14 @@ runs:
               changedSection += `\n\n> **...and ${overflow} more file${overflow > 1 ? 's' : ''}.** See the full diff for details.`;
             }
           } else {
-            changedSection = '### Changed Files\n\n_Code changes detected but file list unavailable._';
+            changedSection = '### Changed Files\n\n_No file changes detected._';
+          }
+
+          // Build issues section from stale files
+          let issuesSection = '';
+          if (stale && stale !== 'none' && stale.trim()) {
+            const staleFiles = stale.split(',').map(f => `- \`${f.trim()}\` needs update`);
+            issuesSection = `### Issues\n\n${staleFiles.join('\n')}`;
           }
 
           // Build stale context section
@@ -134,14 +279,13 @@ runs:
             const staleFiles = stale.split(',').map(f => `- \`${f.trim()}\``);
             staleSection = `### Stale Context Files\n\n${staleFiles.join('\n')}`;
           } else {
-            staleSection = '### Stale Context Files\n\n_No specific stale files detected, but context may be outdated._';
+            staleSection = '### Stale Context Files\n\n_All context files are up to date._';
           }
 
           const body = [
-            '## ⚠️ RepoMemory: Context Drift Detected',
-            '',
-            'Your code changed but your AI context files need updating.',
-            '',
+            ...header,
+            issuesSection ? issuesSection : '',
+            issuesSection ? '' : '',
             changedSection,
             '',
             staleSection,

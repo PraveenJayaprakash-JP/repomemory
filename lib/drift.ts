@@ -1,6 +1,7 @@
 // RepoMemory — Drift detection between repo scans
 
-import type { ProjectSnapshot, DriftEvent } from './types';
+import { execSync } from 'child_process';
+import type { ProjectSnapshot, DriftEvent, DriftRiskLevel, AdvancedDriftResult } from './types';
 import { generateId } from './storage';
 
 // ---------------------------------------------------------------------------
@@ -125,6 +126,273 @@ function getTopLevelDirs(paths: string[]): string[] {
     }
   }
   return [...dirs].sort();
+}
+
+// ---------------------------------------------------------------------------
+// Advanced drift check — git-aware analysis with risk scoring
+// ---------------------------------------------------------------------------
+
+/** In-memory timeline of drift events per project path */
+const driftTimeline: Map<string, Array<{ timestamp: string; score: number; riskLevel: DriftRiskLevel }>> = new Map();
+
+/** File patterns classified by risk level when changed */
+const HIGH_RISK_PATTERNS = [
+  'package.json', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock',
+  'Dockerfile', 'docker-compose.yml', 'docker-compose.yaml',
+  '.github/workflows', '.gitlab-ci.yml',
+  'Cargo.toml', 'go.mod', 'pyproject.toml',
+  'next.config', 'nuxt.config', 'vite.config', 'tsconfig.json',
+];
+
+const LOW_RISK_PATTERNS = [
+  '.test.', '.spec.', '__tests__', '.stories.', '.storybook/',
+  'README.md', 'CHANGELOG.md', 'LICENSE', '.mdx',
+];
+
+/** Classify a single file change into a risk level */
+function classifyFileRisk(filePath: string): DriftRiskLevel {
+  const normalized = filePath.replace(/\\/g, '/');
+  if (HIGH_RISK_PATTERNS.some(p => normalized.includes(p))) return 'high';
+  if (LOW_RISK_PATTERNS.some(p => normalized.includes(p))) return 'low';
+  return 'medium';
+}
+
+/** Map a numeric drift score to a risk level */
+function scoreToRiskLevel(score: number): DriftRiskLevel {
+  if (score >= 80) return 'low';
+  if (score >= 50) return 'medium';
+  if (score >= 20) return 'high';
+  return 'critical';
+}
+
+/** Safely run a git command, returning stdout or null on failure */
+function gitCommand(cwd: string, args: string, timeoutMs: number = 5000): string | null {
+  try {
+    return execSync(`git ${args}`, {
+      cwd,
+      encoding: 'utf-8',
+      timeout: timeoutMs,
+      stdio: ['pipe', 'pipe', 'pipe'],
+    }).trim();
+  } catch {
+    return null;
+  }
+}
+
+/** Gather git insights for a repo folder */
+function gatherGitInsights(folderPath: string): AdvancedDriftResult['gitInsights'] {
+  const defaultInsights: AdvancedDriftResult['gitInsights'] = {
+    recentCommits: 0,
+    authors: [],
+    hasUnpushed: false,
+  };
+
+  // Verify it's a git repo
+  const isGitRepo = gitCommand(folderPath, 'rev-parse --is-inside-work-tree');
+  if (isGitRepo !== 'true') return defaultInsights;
+
+  // Recent commits count
+  const logOutput = gitCommand(folderPath, 'log --oneline -20');
+  const recentCommits = logOutput ? logOutput.split('\n').filter(Boolean).length : 0;
+
+  // Unique authors in recent commits
+  const authorOutput = gitCommand(folderPath, 'log --format="%aN" -20');
+  const authors = authorOutput
+    ? [...new Set(authorOutput.split('\n').filter(Boolean))]
+    : [];
+
+  // Check for unpushed commits
+  const branchOutput = gitCommand(folderPath, 'rev-parse --abbrev-ref HEAD');
+  let hasUnpushed = false;
+  if (branchOutput) {
+    const unpushedOutput = gitCommand(folderPath, `log --oneline origin/${branchOutput}..HEAD`);
+    // If the command fails (no upstream), check if any local-only commits exist
+    if (unpushedOutput === null) {
+      // No remote tracking branch → assume unpushed
+      hasUnpushed = true;
+    } else {
+      hasUnpushed = unpushedOutput.length > 0;
+    }
+  }
+
+  return { recentCommits, authors, hasUnpushed };
+}
+
+/** Build repair suggestions based on drift findings */
+function buildRepairSuggestions(
+  changedFiles: AdvancedDriftResult['changedFiles'],
+  staleContextFiles: AdvancedDriftResult['staleContextFiles'],
+  gitInsights: AdvancedDriftResult['gitInsights'],
+): string[] {
+  const suggestions: string[] = [];
+
+  if (staleContextFiles.length > 0) {
+    suggestions.push('Run `repomemory generate . --apply` to update CLAUDE.md and other context files');
+  }
+
+  const highRiskFiles = changedFiles.filter(f => f.risk === 'high');
+  if (highRiskFiles.length > 0) {
+    const fileNames = highRiskFiles.map(f => f.path).join(', ');
+    suggestions.push(`Review high-risk config changes: ${fileNames} — these affect build/deploy pipelines`);
+  }
+
+  const deletedFiles = changedFiles.filter(f => f.change === 'deleted');
+  if (deletedFiles.length > 0) {
+    suggestions.push('Deleted files detected — verify no stale imports reference removed modules');
+  }
+
+  if (gitInsights.hasUnpushed) {
+    suggestions.push('Unpushed commits detected — push to remote before regenerating context to avoid stale references');
+  }
+
+  if (gitInsights.recentCommits > 10) {
+    suggestions.push(`${gitInsights.recentCommits} recent commits — consider regenerating context to capture recent changes`);
+  }
+
+  if (suggestions.length === 0 && changedFiles.length > 0) {
+    suggestions.push('Minor drift detected — context files may still be accurate but consider a refresh');
+  }
+
+  return suggestions;
+}
+
+/** Compute a drift score (0-100) based on file changes and context staleness */
+function computeDriftScore(
+  changedFiles: AdvancedDriftResult['changedFiles'],
+  staleContextFiles: AdvancedDriftResult['staleContextFiles'],
+  gitInsights: AdvancedDriftResult['gitInsights'],
+): number {
+  // Start at 100 (no drift) and subtract for issues
+  let score = 100;
+
+  // Deductions per changed file, weighted by risk
+  for (const f of changedFiles) {
+    switch (f.risk) {
+      case 'critical': score -= 15; break;
+      case 'high': score -= 10; break;
+      case 'medium': score -= 5; break;
+      case 'low': score -= 2; break;
+    }
+  }
+
+  // Stale context files are a strong signal
+  score -= staleContextFiles.length * 8;
+
+  // Unpushed commits increase drift risk
+  if (gitInsights.hasUnpushed) score -= 5;
+
+  // High commit velocity increases drift likelihood
+  if (gitInsights.recentCommits > 10) score -= 5;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+/** Build a human-readable summary */
+function buildSummary(
+  score: number,
+  riskLevel: DriftRiskLevel,
+  changedFiles: AdvancedDriftResult['changedFiles'],
+  staleContextFiles: AdvancedDriftResult['staleContextFiles'],
+  gitInsights: AdvancedDriftResult['gitInsights'],
+): string {
+  const parts: string[] = [];
+
+  parts.push(`Drift score: ${score}/100 (${riskLevel} risk)`);
+
+  if (changedFiles.length > 0) {
+    const byChange = {
+      modified: changedFiles.filter(f => f.change === 'modified').length,
+      added: changedFiles.filter(f => f.change === 'added').length,
+      deleted: changedFiles.filter(f => f.change === 'deleted').length,
+    };
+    const changeParts: string[] = [];
+    if (byChange.modified > 0) changeParts.push(`${byChange.modified} modified`);
+    if (byChange.added > 0) changeParts.push(`${byChange.added} added`);
+    if (byChange.deleted > 0) changeParts.push(`${byChange.deleted} deleted`);
+    parts.push(`Files changed: ${changeParts.join(', ')}`);
+  }
+
+  if (staleContextFiles.length > 0) {
+    parts.push(`${staleContextFiles.length} stale context section(s)`);
+  }
+
+  if (gitInsights.recentCommits > 0) {
+    parts.push(`${gitInsights.recentCommits} recent commits by ${gitInsights.authors.length} author(s)`);
+  }
+
+  if (gitInsights.hasUnpushed) {
+    parts.push('unpushed commits detected');
+  }
+
+  return parts.join('. ') + '.';
+}
+
+/** Advanced git-aware drift check with risk scoring, timeline tracking, and repair suggestions */
+export function advancedDriftCheck(
+  current: ProjectSnapshot,
+  previous: ProjectSnapshot,
+  folderPath: string,
+): AdvancedDriftResult {
+  // 1. Run basic drift detection (reuse existing logic)
+  const basicResult = checkDrift(current, previous);
+
+  // 2. Classify each changed file by risk
+  const changedFiles: AdvancedDriftResult['changedFiles'] = basicResult.changedFiles.map(f => ({
+    path: f.path,
+    change: f.change,
+    risk: classifyFileRisk(f.path),
+  }));
+
+  // 3. Enrich stale context files with section and reason
+  const staleContextFiles: AdvancedDriftResult['staleContextFiles'] = basicResult.staleContextFiles.map(entry => {
+    // Parse entries like "CLAUDE.md (Commands section)" into structured data
+    const match = entry.match(/^(.+?)\s*\((.+?)\)$/);
+    if (match) {
+      return { file: match[1], section: match[2], reason: `Content in ${match[2]} is stale due to detected changes` };
+    }
+    return { file: entry, section: 'unknown', reason: 'Stale content detected' };
+  });
+
+  // 4. Gather git insights
+  const gitInsights = gatherGitInsights(folderPath);
+
+  // 5. Compute drift score
+  const driftScore = computeDriftScore(changedFiles, staleContextFiles, gitInsights);
+
+  // 6. Determine risk level
+  const riskLevel = scoreToRiskLevel(driftScore);
+
+  // 7. Build repair suggestions
+  const repairSuggestions = buildRepairSuggestions(changedFiles, staleContextFiles, gitInsights);
+
+  // 8. Build summary
+  const summary = buildSummary(driftScore, riskLevel, changedFiles, staleContextFiles, gitInsights);
+
+  // 9. Track in timeline
+  const projectKey = current.folderPath;
+  const timeline = driftTimeline.get(projectKey) ?? [];
+  timeline.push({
+    timestamp: new Date().toISOString(),
+    score: driftScore,
+    riskLevel,
+  });
+  driftTimeline.set(projectKey, timeline);
+
+  return {
+    hasDrift: basicResult.hasDrift || driftScore < 80,
+    driftScore,
+    riskLevel,
+    changedFiles,
+    staleContextFiles,
+    repairSuggestions,
+    summary,
+    gitInsights,
+  };
+}
+
+/** Retrieve the drift timeline for a project (in-memory, no DB) */
+export function getDriftTimeline(folderPath: string): Array<{ timestamp: string; score: number; riskLevel: DriftRiskLevel }> {
+  return driftTimeline.get(folderPath) ?? [];
 }
 
 // ---------------------------------------------------------------------------

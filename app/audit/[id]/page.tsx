@@ -14,8 +14,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import BadgeSnippet from '@/components/BadgeSnippet';
 import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera, Expand, Sparkles } from 'lucide-react';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera, Expand, Sparkles, BookOpen, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
+import type { AdrRecord } from '@/lib/adr';
 import { buildArchitectureGraph, getGraphSummary } from '@/lib/graph';
 import ArchGraph from '@/components/ArchGraph';
 
@@ -55,6 +56,9 @@ export default function AuditPage() {
   const [error, setError] = useState('');
   const [previousScanId, setPreviousScanId] = useState<string | null>(null);
   const [fullViewGraph, setFullViewGraph] = useState(false);
+  const [adrs, setAdrs] = useState<AdrRecord[]>([]);
+  const [generatingAdrs, setGeneratingAdrs] = useState(false);
+  const [expandedAdr, setExpandedAdr] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadScan() {
@@ -142,6 +146,33 @@ export default function AuditPage() {
       toast.error(message);
     } finally {
       setFixing(false);
+    }
+  };
+
+  const handleGenerateAdrs = async () => {
+    if (!scan) return;
+    setGeneratingAdrs(true);
+    const loadingToast = toast.loading('Generating ADRs from git history...');
+    try {
+      const res = await fetch('/api/adr', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ folderPath: scan.snapshot.folderPath }),
+      });
+      const data = await res.json();
+      if (!data.ok) throw new Error(data.error);
+      setAdrs(data.data.records);
+      setActiveTab('adrs');
+      toast.dismiss(loadingToast);
+      toast.success('ADRs generated', {
+        description: `${data.data.records.length} ADR${data.data.records.length !== 1 ? 's' : ''} created`,
+      });
+    } catch (err) {
+      toast.dismiss(loadingToast);
+      const message = err instanceof Error ? err.message : 'ADR generation failed';
+      toast.error(message);
+    } finally {
+      setGeneratingAdrs(false);
     }
   };
 
@@ -248,6 +279,10 @@ export default function AuditPage() {
           <TabsTrigger value="architecture" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
             <Network className="h-4 w-4" />
             Architecture
+          </TabsTrigger>
+          <TabsTrigger value="adrs" className="flex-1 md:w-full justify-center md:justify-start gap-2 px-3 py-2 text-sm data-[active]:bg-accent data-[active]:text-foreground rounded-md">
+            <BookOpen className="h-4 w-4" />
+            ADRs
           </TabsTrigger>
         </TabsList>
 
@@ -414,6 +449,116 @@ export default function AuditPage() {
               </>
             );
           })()}
+        </TabsContent>
+
+        <TabsContent value="adrs" className="space-y-4 mt-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-lg font-semibold">Architecture Decision Records</h3>
+              <p className="text-sm text-muted-foreground">
+                Auto-generated from git history, dependencies, and config changes
+              </p>
+            </div>
+            <Button onClick={handleGenerateAdrs} disabled={generatingAdrs}>
+              {generatingAdrs ? (
+                <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Generating...</>
+              ) : (
+                <><BookOpen className="h-4 w-4 mr-2" />Generate ADRs from git history</>
+              )}
+            </Button>
+          </div>
+
+          {adrs.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center">
+                <BookOpen className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">No ADRs generated yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Click the button above to analyze git history and generate ADRs
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {adrs.map((adr) => (
+                <Card key={adr.id} className="transition-default hover:shadow-sm">
+                  <CardHeader
+                    className="cursor-pointer select-none"
+                    onClick={() =>
+                      setExpandedAdr(expandedAdr === adr.id ? null : adr.id)
+                    }
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-xs font-mono text-muted-foreground">
+                            {adr.id}
+                          </span>
+                          <Badge
+                            variant={
+                              adr.status === 'accepted'
+                                ? 'default'
+                                : adr.status === 'deprecated'
+                                  ? 'destructive'
+                                  : 'secondary'
+                            }
+                            className="text-xs"
+                          >
+                            {adr.status}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-sm leading-snug">
+                          {adr.title}
+                        </CardTitle>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0 ml-3">
+                        <span className="text-xs text-muted-foreground">
+                          {adr.date}
+                        </span>
+                        {expandedAdr === adr.id ? (
+                          <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </div>
+                    </div>
+                  </CardHeader>
+                  {expandedAdr === adr.id && (
+                    <CardContent className="pt-0 space-y-3">
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Context
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{adr.context}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Decision
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{adr.decision}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          Consequences
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">
+                          {adr.consequences}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 pt-1">
+                        <Badge variant="outline" className="text-xs">
+                          {adr.source}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground font-mono">
+                          {adr.sourceRef}
+                        </span>
+                      </div>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
       </div>
         </Tabs>

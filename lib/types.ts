@@ -69,6 +69,25 @@ export interface GeneratedFile {
   applied: boolean;
 }
 
+/** Risk level for drift severity */
+export type DriftRiskLevel = 'low' | 'medium' | 'high' | 'critical';
+
+/** Advanced drift result with git-aware analysis, scoring, and repair suggestions */
+export interface AdvancedDriftResult {
+  hasDrift: boolean;
+  driftScore: number;        // 0-100
+  riskLevel: DriftRiskLevel;
+  changedFiles: { path: string; change: 'modified' | 'added' | 'deleted'; risk: DriftRiskLevel }[];
+  staleContextFiles: { file: string; section: string; reason: string }[];
+  repairSuggestions: string[];
+  summary: string;
+  gitInsights: {
+    recentCommits: number;
+    authors: string[];
+    hasUnpushed: boolean;
+  };
+}
+
 /** A drift event when repo changed but context didn't */
 export interface DriftEvent {
   id: string;

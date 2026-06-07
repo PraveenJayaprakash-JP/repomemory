@@ -10,7 +10,8 @@ import {
 } from "@modelcontextprotocol/sdk/types.js";
 import { z } from "zod";
 import { scanRepository } from "../../lib/scanner.ts";
-import { auditClaudeMd } from "../../lib/auditor.ts";
+import { auditClaudeMd, auditContextFiles } from "../../lib/auditor.ts";
+import { discoverArchitectureLegacy } from "../../lib/discovery.ts";
 import { generateContextPack } from "../../lib/generator.ts";
 import { checkDrift } from "../../lib/drift.ts";
 import { buildArchitectureGraph } from "../../lib/graph.ts";
@@ -42,6 +43,11 @@ const ApplyPackSchema = z.object({
 
 const ExplainRepoSchema = z.object({
   folderPath: z.string().describe("Absolute path to the local repository folder"),
+});
+
+const ExplainCodebaseSchema = z.object({
+  folderPath: z.string().describe("Absolute path to the local repository folder"),
+  detail: z.enum(["brief", "normal", "detailed"]).optional().describe("Level of detail: brief (summary only), normal (default), detailed (includes architecture discovery)"),
 });
 
 const SuggestContextUpdatesSchema = z.object({
@@ -205,6 +211,25 @@ Optionally specify which files to write (default: all).`,
           folderPath: {
             type: "string",
             description: "Absolute path to the local repository folder",
+          },
+        },
+        required: ["folderPath"],
+      },
+    },
+    {
+      name: "explain_codebase",
+      description: `Provides a comprehensive explanation of a repository's codebase — architecture, modules, data flow, tech stack, and development workflow. Uses AI to synthesize the analysis.`,
+      inputSchema: {
+        type: "object",
+        properties: {
+          folderPath: {
+            type: "string",
+            description: "Absolute path to the local repository folder",
+          },
+          detail: {
+            type: "string",
+            enum: ["brief", "normal", "detailed"],
+            description: "Level of detail: brief (summary only), normal (default), detailed (includes architecture discovery)",
           },
         },
         required: ["folderPath"],
@@ -623,6 +648,107 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
                 badge,
                 summary,
               }, null, 2),
+            },
+          ],
+        };
+      }
+
+case "explain_codebase": {
+        const { folderPath, detail } = ExplainCodebaseSchema.parse(args);
+        const snapshot = await scanRepository(folderPath);
+        const contextAudit = auditContextFiles(snapshot);
+        const graph = buildArchitectureGraph(snapshot);
+
+        // Categorize dependencies into tech stack areas
+        const pkg = snapshot.keyFiles.packageJson as Record<string, unknown> | null;
+        const allDeps: Record<string, string> = pkg
+          ? {
+              ...((pkg.dependencies as Record<string, string> | undefined) ?? {}),
+              ...((pkg.devDependencies as Record<string, string> | undefined) ?? {}),
+            }
+          : {};
+        const depNames = Object.keys(allDeps);
+
+        const frontendKeywords = ['react', 'vue', 'angular', 'svelte', 'next', 'nuxt', 'tailwind', 'chakra', 'mui', 'radix', 'shadcn', 'styled', 'emotion', 'sass', 'postcss', 'vite', 'webpack'];
+        const backendKeywords = ['express', 'fastify', 'koa', 'hono', 'nestjs', 'trpc', 'graphql', 'apollo', 'prisma', 'drizzle', 'mongoose', 'knex', 'sequelize', 'typeorm', 'supabase'];
+        const dbKeywords = ['postgres', 'mysql', 'mongodb', 'redis', 'sqlite', 'supabase', 'prisma', 'drizzle', 'typeorm', 'mongoose', 'knex', 'sequelize', 'dynamodb'];
+        const infraKeywords = ['docker', 'kubernetes', 'terraform', 'aws', 'vercel', 'netlify', 'cloudflare', 'railway', 'heroku', 'ansible'];
+        const testKeywords = ['jest', 'vitest', 'mocha', 'cypress', 'playwright', 'testing-library', 'pytest', 'eslint', 'prettier'];
+
+        const categorize = (names: string[], keywords: string[]): string[] =>
+          names.filter((n) => keywords.some((k) => n.toLowerCase().includes(k)));
+
+        const techStack = {
+          frontend: categorize(depNames, frontendKeywords),
+          backend: categorize(depNames, backendKeywords),
+          database: categorize(depNames, dbKeywords),
+          infrastructure: categorize(depNames, infraKeywords),
+          testing: categorize(depNames, testKeywords),
+        };
+
+        // Derive top-level modules
+        const topLevelDirs = [...new Set(
+          snapshot.topFiles
+            .map((f) => f.split('/')[0])
+            .filter((d): d is string => !!d && !d.includes('.'))
+        )];
+
+        // Extract key commands from package.json
+        const keyCommands: Record<string, string> = {};
+        if (pkg && typeof pkg.scripts === 'object' && pkg.scripts !== null) {
+          const scripts = pkg.scripts as Record<string, string>;
+          for (const [name, cmd] of Object.entries(scripts)) {
+            if (['dev', 'start', 'build', 'test', 'lint', 'typecheck'].includes(name)) {
+              keyCommands[name] = cmd;
+            }
+          }
+        }
+
+        // Build response based on detail level
+        const result: Record<string, unknown> = {
+          repoName: snapshot.repoName,
+          language: snapshot.language,
+          framework: snapshot.framework,
+          fileCount: snapshot.fileCount,
+          aiReadiness: {
+            score: contextAudit.totalScore,
+            badge: contextAudit.badge,
+            suggestions: contextAudit.dimensions
+              .filter((d) => d.score < d.maxScore * 0.6)
+              .flatMap((d) => d.suggestions.slice(0, 2)),
+          },
+        };
+
+        if (detail !== 'brief') {
+          result.architecture = {
+            topLevelDirs,
+            keyFiles: {
+              hasPackageJson: snapshot.keyFiles.packageJson !== null,
+              hasDockerfile: snapshot.keyFiles.dockerFile !== null,
+              hasCiConfig: snapshot.keyFiles.ciConfig !== null,
+              hasEnvExample: snapshot.keyFiles.envExample !== null,
+            },
+            graphNodes: graph.nodes.length,
+            graphEdges: graph.edges.length,
+          };
+          result.techStack = techStack;
+          result.modules = topLevelDirs.map((dir) => ({
+            name: dir,
+            path: `${snapshot.repoName}/${dir}`,
+          }));
+          result.keyCommands = keyCommands;
+        }
+
+        if (detail === 'detailed') {
+          const discovery = discoverArchitectureLegacy(snapshot, graph);
+          result.architectureDiscovery = discovery;
+        }
+
+        return {
+          content: [
+            {
+              type: "text",
+              text: JSON.stringify(result, null, 2),
             },
           ],
         };
