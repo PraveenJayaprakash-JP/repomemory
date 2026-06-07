@@ -133,3 +133,68 @@ Import traces:
 
     at <unknown> (Error: ./app/audit/[id]/page.tsx:359:14)
     at <unknown> (Error: (./app/audit/[id]/page.tsx:359:14)
+[browser] In HTML, <button> cannot be a descendant of <button>.
+This will cause a hydration error.
+
+  ...
+    <div className="flex-1 min...">
+      <TabsContent>
+      <TabsContent>
+      <TabsContent>
+      <TabsContent>
+      <TabsContent value="architecture" className="space-y-4 ...">
+        <TabsPanel data-slot="tabs-content" className="flex-1 tex..." value="architecture">
+          <div data-orientation="horizontal" data-activation-direction="none" aria-labelledby="base-ui-_r_q_" ...>
+            <div>
+            <p>
+            <Card>
+              <div data-slot="card" data-size="default" className={"group/ca..."}>
+                <CardHeader className="flex flex-...">
+                  <div data-slot="card-header" className="group/card...">
+                    <CardTitle>
+                    <Dialog open={false} onOpenChange={function bound dispatchSetState}>
+                      <DialogRoot data-slot="dialog" open={false} onOpenChange={function bound dispatchSetState}>
+                        <DialogTrigger asChild={true}>
+                          <DialogTrigger data-slot="dialog-tri..." asChild={true}>
+>                           <button
+>                             type="button"
+>                             onClick={function}
+>                             onMouseDown={function}
+>                             onKeyDown={function}
+>                             onKeyUp={function}
+>                             onPointerDown={function}
+>                             tabIndex={0}
+>                             disabled={false}
+>                             data-base-ui-click-trigger=""
+>                             id="base-ui-_r_11_"
+>                             aria-haspopup="dialog"
+>                             aria-expanded={false}
+>                             aria-controls={undefined}
+>                             data-slot="dialog-trigger"
+>                             asChild={true}
+>                             ref={function}
+>                           >
+                              <Button variant="outline" size="sm">
+                                <Button data-slot="button" className={"group/bu..."}>
+>                                 <button
+>                                   type="button"
+>                                   onClick={function}
+>                                   onMouseDown={function}
+>                                   onKeyDown={function}
+>                                   onKeyUp={function}
+>                                   onPointerDown={function}
+>                                   tabIndex={0}
+>                                   disabled={false}
+>                                   data-slot="button"
+>                                   ref={function}
+>                                   className={"group/button inline-flex shrink-0 items-center justify-center border ..."}
+>                                 >
+                        ...
+                ...
+ 
+    at Set.forEach (<anonymous>) (<anonymous>)
+[browser] <button> cannot contain a nested <button>.
+See this log for the ancestor stack trace. 
+    at Set.forEach (<anonymous>) (<anonymous>)
+[browser] React does not recognize the `asChild` prop on a DOM element. If you intentionally want it to appear in the DOM as a custom attribute, spell it as lowercase `aschild` instead. If you accidentally passed it from a parent component, remove it from the DOM element. 
+    at Set.forEach (<anonymous>) (<anonymous>)

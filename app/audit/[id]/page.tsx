@@ -13,7 +13,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import BadgeSnippet from '@/components/BadgeSnippet';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera } from 'lucide-react';
+import { Dialog, DialogTrigger, DialogContent, DialogTitle } from '@/components/ui/dialog';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare, Shield, Network, ScrollText, FileText, ShieldCheck, Camera, Expand } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
 import { buildArchitectureGraph, getGraphSummary } from '@/lib/graph';
 import ArchGraph from '@/components/ArchGraph';
@@ -52,6 +53,7 @@ export default function AuditPage() {
   const [activeTab, setActiveTab] = useState('audit');
   const [error, setError] = useState('');
   const [previousScanId, setPreviousScanId] = useState<string | null>(null);
+  const [fullViewGraph, setFullViewGraph] = useState(false);
 
   useEffect(() => {
     async function loadScan() {
@@ -345,8 +347,20 @@ export default function AuditPage() {
                   .
                 </p>
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Dependency Map</CardTitle>
+                    <Dialog open={fullViewGraph} onOpenChange={setFullViewGraph}>
+                      <DialogTrigger className="inline-flex items-center justify-center rounded-md border border-input bg-background px-3 py-1.5 text-sm font-medium hover:bg-accent hover:text-accent-foreground transition-default">
+                        <Expand className="h-4 w-4 mr-1.5" />
+                        Full View
+                      </DialogTrigger>
+                      <DialogContent className="max-w-5xl w-[95vw] h-[85vh] flex flex-col">
+                        <DialogTitle className="text-lg">Dependency Map — Full View</DialogTitle>
+                        <div className="flex-1 overflow-auto p-4 bg-muted/20 rounded-lg">
+                          <ArchGraph graph={graph} />
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </CardHeader>
                   <CardContent>
                     <ArchGraph graph={graph} />
