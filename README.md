@@ -188,11 +188,24 @@ Add to your `opencode.json` or `claude_desktop_config.json`:
 
 ## 📸 Screenshots
 
-```
-[ Dashboard ]    [ Audit Page ]    [ Architecture Graph ]    [ Score Timeline ]
-```
-
-*(Screenshots coming soon — run `npm run dev` to see it live)*
+<div align="center">
+  <table>
+    <tr>
+      <td><img src="public/screenshots/dashboard.png" alt="Dashboard" width="400"></td>
+      <td><img src="public/screenshots/scan.png" alt="Scan Page" width="400"></td>
+    </tr>
+    <tr>
+      <td align="center"><b>Dashboard</b> — scan history & score timeline</td>
+      <td align="center"><b>Scan Page</b> — repo scanner & folder picker</td>
+    </tr>
+    <tr>
+      <td colspan="2"><img src="public/screenshots/audit-results.png" alt="Audit Results" width="800"></td>
+    </tr>
+    <tr>
+      <td colspan="2" align="center"><b>Audit Results</b> — 7-dimension score, quality suggestions, architecture graph</td>
+    </tr>
+  </table>
+</div>
 
 ---
 
