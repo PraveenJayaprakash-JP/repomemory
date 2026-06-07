@@ -12,7 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
-import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download } from 'lucide-react';
+import { ArrowLeft, FolderGit, Files, BarChart3, Calendar, Loader2, Download, GitCompare } from 'lucide-react';
 import type { Scan, GeneratedFile } from '@/lib/types';
 
 function AuditSkeleton() {
@@ -48,6 +48,7 @@ export default function AuditPage() {
   const [files, setFiles] = useState<GeneratedFile[]>([]);
   const [activeTab, setActiveTab] = useState('audit');
   const [error, setError] = useState('');
+  const [previousScanId, setPreviousScanId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadScan() {
@@ -56,6 +57,21 @@ export default function AuditPage() {
         const data = await res.json();
         if (!data.ok) throw new Error(data.error || 'Scan not found');
         setScan(data.data);
+
+        // Find previous scan for comparison
+        try {
+          const scansRes = await fetch(`/api/scans?projectId=${encodeURIComponent(data.data.projectId)}`);
+          const scansData = await scansRes.json();
+          if (scansData.ok) {
+            const scansList: { id: string; createdAt: string }[] = scansData.data.scans;
+            const currentIdx = scansList.findIndex((s: { id: string }) => s.id === data.data.id);
+            if (currentIdx > 0) {
+              setPreviousScanId(scansList[currentIdx - 1].id);
+            }
+          }
+        } catch {
+          // Non-critical: comparison button just won't appear
+        }
       } catch (err) {
         const message = err instanceof Error ? err.message : 'Failed to load';
         setError(message);
@@ -129,6 +145,17 @@ export default function AuditPage() {
           </p>
         </div>
         <Badge variant="secondary" className="ml-auto shrink-0">{scan.snapshot.language}</Badge>
+        {previousScanId && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => router.push(`/compare?scanId1=${previousScanId}&scanId2=${scan.id}`)}
+            className="shrink-0"
+          >
+            <GitCompare className="h-4 w-4 mr-2" />
+            Compare with previous
+          </Button>
+        )}
       </div>
 
       <DriftAlert events={scan.driftEvents} />
