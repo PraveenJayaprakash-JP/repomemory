@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
       <body className="min-h-dvh flex flex-col">
         <header className="border-b bg-background/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="max-w-5xl mx-auto px-4 h-14 flex items-center gap-6">
+          <div className="max-w-6xl mx-auto px-4 h-14 flex items-center gap-6">
             <Link href="/" className="font-semibold text-lg tracking-tight hover:opacity-80 transition-opacity">
               RepoMemory
             </Link>
@@ -39,7 +39,7 @@ export default function RootLayout({
             </nav>
           </div>
         </header>
-        <main className="flex-1 max-w-5xl mx-auto w-full px-4 py-8">
+        <main className="flex-1 max-w-6xl mx-auto w-full px-4 py-8">
           {children}
         </main>
         <Toaster richColors position="bottom-right" />

@@ -75,7 +75,7 @@ export default function ScoreCard({ totalScore, dimensions, badge, cta }: ScoreC
           </div>
         )}
 
-        <div className="space-y-4">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           {dimensions.map((dim, index) => {
             const pct = (dim.score / dim.maxScore) * 100;
             const color = getScoreColor(pct);
