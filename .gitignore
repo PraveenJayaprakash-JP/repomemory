@@ -48,3 +48,7 @@ screenshots/
 mcp/dist/
 cli/dist/
 vscode/out/
+
+# Sub-package node_modules
+*/node_modules/
+
