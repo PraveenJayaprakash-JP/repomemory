@@ -1,8 +1,9 @@
 // POST /api/generate — Generate AI context pack for a scan
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getScan, saveScan } from '@/lib/storage';
+import { getScan, saveScan, listScans } from '@/lib/storage';
 import { generateContextPack } from '@/lib/generator';
+import { detectContextChanges } from '@/lib/drift';
 import type { ApiResponse, GeneratedFile, AgentType } from '@/lib/types';
 
 export const maxDuration = 300;
@@ -32,8 +33,25 @@ export async function POST(request: NextRequest) {
       ? agents as AgentType[]
       : undefined;
 
-    // Generate the context pack
-    const files = await generateContextPack(scan.snapshot, { agents: agentList });
+    // Smart regeneration: detect changes from previous scan
+    let changes: ReturnType<typeof detectContextChanges> | undefined;
+    let existingFiles: GeneratedFile[] | undefined;
+
+    const previousScans = listScans(scan.projectId);
+    const previousScan = previousScans.find(s => s.id !== scanId);
+    if (previousScan) {
+      changes = detectContextChanges(scan.snapshot, previousScan.snapshot);
+      existingFiles = previousScan.generatedFiles.length > 0
+        ? previousScan.generatedFiles
+        : undefined;
+    }
+
+    // Generate the context pack (smart regen if changes detected)
+    const files = await generateContextPack(scan.snapshot, {
+      agents: agentList,
+      changes,
+      existingFiles,
+    });
 
     // Save generated files to scan
     scan.generatedFiles = files;

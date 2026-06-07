@@ -1,5 +1,6 @@
 // RepoMemory — Prompt builders for AI context generation
 import type { ProjectSnapshot } from './types';
+import type { ContextChange } from './drift';
 
 // ---------------------------------------------------------------------------
 // System prompts — instruct AI behavior for each generation category
@@ -461,4 +462,49 @@ Requirements:
 
 Tone: precise, structured, practical. No fluff.
 Output: markdown content for AIDER.md.`;
+}
+
+// ---------------------------------------------------------------------------
+// Smart regeneration — targeted update prompt
+// ---------------------------------------------------------------------------
+
+export const SMART_REGEN_SYSTEM_PROMPT = `You are a senior engineer updating a project context file. You will receive the EXISTING content and a list of sections that changed. Your job is to update ONLY the affected sections while preserving all other content exactly as-is. Do NOT rewrite unchanged sections. Do NOT add new sections unless the changes require it. Do NOT remove sections. Output the COMPLETE file with changes applied.`;
+
+export function buildSmartRegenerationPrompt(
+  snapshot: ProjectSnapshot,
+  existingContent: string,
+  changes: ContextChange[],
+  targetFile: string
+): string {
+  const changeDescriptions = changes
+    .map(c => `- **${c.section}** (priority: ${c.priority}): ${c.reason}`)
+    .join('\n');
+
+  const frameworkNote = snapshot.framework !== 'None' && snapshot.framework !== 'Unknown'
+    ? `Framework: ${snapshot.framework}\n`
+    : '';
+
+  return `Update the existing ${targetFile} for the project "${snapshot.repoName}".
+
+Project details:
+- Language: ${snapshot.language}
+${frameworkNote}- File count: ${snapshot.fileCount}
+- Total size: ${(snapshot.totalSizeBytes / 1024).toFixed(1)} KB
+
+The following changes were detected in the project:
+${changeDescriptions}
+
+INSTRUCTIONS:
+1. Read the EXISTING content below carefully
+2. Update ONLY the sections listed above — rewrite those sections based on the current project state
+3. Preserve ALL other sections exactly as they are — do not rephrase, reorder, or remove them
+4. If a changed section doesn't exist yet, add it in an appropriate location
+5. Output the COMPLETE file with the targeted changes applied
+
+EXISTING CONTENT:
+---
+${existingContent}
+---
+
+Output the complete ${targetFile} with only the affected sections updated.`;
 }
