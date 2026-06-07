@@ -13,7 +13,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check, ScrollText, FileText, Sparkles } from 'lucide-react';
+import { Download, FileUp, Loader2, FolderGit, Files, BarChart3, Check, ScrollText, FileText, Sparkles, GitCommitHorizontal } from 'lucide-react';
+import ChangeSummary from '@/components/ChangeSummary';
 import type { Scan, Project, GeneratedFile, AgentType } from '@/lib/types';
 import { AGENT_DISPLAY_NAMES, AGENT_FILE_MAP } from '@/lib/types';
 
@@ -242,6 +243,10 @@ export default function ScanPage() {
               <FileText className="h-4 w-4" />
               Generated Files
             </TabsTrigger>
+            <TabsTrigger value="changes" className="gap-1.5 px-2 py-1 text-xs sm:text-sm">
+              <GitCommitHorizontal className="h-4 w-4" />
+              Changes
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="audit" className="space-y-4 mt-4">
@@ -361,6 +366,10 @@ export default function ScanPage() {
                 </Button>
               </div>
             )}
+          </TabsContent>
+
+          <TabsContent value="changes" className="space-y-4 mt-4">
+            <ChangeSummary folderPath={scan.snapshot.folderPath} />
           </TabsContent>
         </Tabs>
       )}
